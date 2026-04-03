@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Excusa — Esto no es terapia… pero ayuda.</title>
+<meta name="description" content="Cajas creativas para juntarte con amigas. Todo incluido, sin experiencia. Abre la caja y partes.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="La Excusa — Esto no es terapia… pero ayuda.">
+<meta property="og:description" content="Cajas creativas para juntarte con amigas. Todo incluido, sin experiencia. Abre la caja y partes.">
+<meta property="og:image" content="logo_la_excusa.png">
+<meta property="og:url" content="https://laexcusa.cl">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--burgundy:#6B1D3A;--burgundy-deep:#4A1228;--blush:#F2D9D5;--blush-light:#FBF0EE;--cream:#FDFAF8;--warm-white:#FFFEFB;--charcoal:#2C2C2C;--soft-gray:#8A8A8A;--nude:#D4A89A;--accent-pink:#E8B4B8;--gold:#C5A47E}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'Cormorant Garamond',serif;background:var(--warm-white);color:var(--charcoal);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+nav{position:fixed;top:0;width:100%;z-index:1000;padding:1.5rem 4rem;display:flex;justify-content:space-between;align-items:center;transition:all .5s cubic-bezier(.4,0,.2,1);background:transparent}
+nav.scrolled{background:rgba(255,254,251,.97);backdrop-filter:blur(20px);padding:1rem 4rem;box-shadow:0 1px 30px rgba(107,29,58,.06)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;letter-spacing:-.02em;color:var(--charcoal);text-decoration:none}
+.nav-links{display:flex;gap:2.5rem;list-style:none;align-items:center}
+.nav-links a{text-decoration:none;color:var(--charcoal);font-size:.9rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;transition:color .3s;font-family:'Cormorant Garamond',serif}
+.nav-links a:hover{color:var(--burgundy)}
+.hamburger{display:none;cursor:pointer;flex-direction:column;gap:5px;background:none;border:none;padding:.5rem}
+.hamburger span{display:block;width:24px;height:2px;background:var(--charcoal);transition:all .3s}
+.hamburger.active span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.active span:nth-child(2){opacity:0}
+.hamburger.active span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.mobile-menu{display:none;position:fixed;top:0;left:0;width:100%;height:100vh;background:var(--warm-white);z-index:999;flex-direction:column;justify-content:center;align-items:center;gap:2rem}
+.mobile-menu.active{display:flex}
+.mobile-menu a{text-decoration:none;color:var(--charcoal);font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:500;transition:color .3s}
+.mobile-menu a:hover{color:var(--burgundy)}
+.btn-primary{background:var(--burgundy);color:#fff;border:none;padding:1rem 2.5rem;font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);text-decoration:none;display:inline-block}
+.btn-primary:hover{background:var(--burgundy-deep);transform:translateY(-2px);box-shadow:0 8px 30px rgba(107,29,58,.3)}
+.btn-secondary{background:transparent;color:var(--burgundy);border:1.5px solid var(--burgundy);padding:1rem 2.5rem;font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);text-decoration:none;display:inline-block}
+.btn-secondary:hover{background:var(--burgundy);color:#fff;transform:translateY(-2px);box-shadow:0 8px 30px rgba(107,29,58,.2)}
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:6rem 2rem 2rem;background:var(--cream);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-30%;right:-20%;width:60vw;height:60vw;border-radius:50%;background:radial-gradient(circle,var(--blush) 0%,transparent 70%);opacity:.4;pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-20%;left:-15%;width:50vw;height:50vw;border-radius:50%;background:radial-gradient(circle,var(--accent-pink) 0%,transparent 70%);opacity:.2;pointer-events:none}
+.hero-content{position:relative;z-index:2;max-width:800px;animation:fadeUp 1.2s ease-out}
+@keyframes fadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.hero-logo-img{width:min(380px,65vw);margin-bottom:2rem;filter:brightness(0) saturate(100%) invert(12%) sepia(45%) saturate(3000%) hue-rotate(320deg) brightness(65%)}
+.hero-tagline{font-family:'Libre Baskerville',serif;font-size:clamp(1.3rem,3vw,2rem);font-style:italic;color:var(--burgundy);margin-bottom:1.5rem;line-height:1.5;animation:fadeIn 1.8s ease-out}
+.hero-subtitle{font-size:clamp(1rem,2vw,1.2rem);color:var(--soft-gray);max-width:520px;margin:0 auto 3rem;line-height:1.8;animation:fadeIn 2.2s ease-out}
+.hero-buttons{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;animation:fadeIn 2.6s ease-out}
+section{padding:7rem 4rem;position:relative}
+.section-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.25em;color:var(--burgundy);font-weight:600;margin-bottom:1.5rem;display:block}
+.section-heading{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:700;line-height:1.15;color:var(--charcoal);margin-bottom:1.5rem;letter-spacing:-.02em}
+.section-heading em{font-style:italic;color:var(--burgundy)}
+.section-text{font-size:clamp(1.05rem,2vw,1.2rem);line-height:1.8;color:var(--soft-gray);max-width:580px}
+.concepto-divider{width:60px;height:1.5px;background:var(--burgundy);margin:2.5rem auto;opacity:.5}
+.concepto{background:var(--warm-white);text-align:center;display:flex;flex-direction:column;align-items:center}
+.concepto .section-text{margin:0 auto}
+.productos{background:var(--cream)}
+.productos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2.5rem;margin-top:3.5rem}
+.producto-card{background:var(--warm-white);overflow:hidden;transition:all .5s cubic-bezier(.4,0,.2,1);cursor:pointer;position:relative}
+.producto-card:hover{transform:translateY(-6px);box-shadow:0 20px 60px rgba(107,29,58,.1)}
+.producto-image{width:100%;aspect-ratio:4/5;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.producto-image-inner{font-family:'Playfair Display',serif;font-size:4rem;font-style:italic;color:var(--burgundy);opacity:.12;font-weight:700}
+.producto-image .img-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:2rem;background:linear-gradient(to top,rgba(74,18,40,.75) 0%,transparent 55%)}
+.producto-numero{font-size:.68rem;text-transform:uppercase;letter-spacing:.3em;color:var(--accent-pink);margin-bottom:.4rem;font-weight:600}
+.producto-nombre{font-family:'Playfair Display',serif;font-size:1.8rem;color:#fff;font-weight:700;margin-bottom:.4rem;line-height:1.2}
+.producto-desc{font-size:.95rem;color:rgba(255,255,255,.8);font-style:italic;line-height:1.4}
+.producto-body{padding:1.8rem 2rem 2rem}
+.producto-body p{font-size:1rem;line-height:1.7;color:var(--soft-gray);margin-bottom:.8rem}
+.producto-precio{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:var(--charcoal);margin-bottom:1rem}
+.producto-precio span{font-size:.8rem;font-weight:400;color:var(--soft-gray);margin-left:.3rem}
+.producto-cta{font-family:'Cormorant Garamond',serif;font-size:.88rem;font-weight:600;text-transform:uppercase;letter-spacing:.15em;color:var(--burgundy);text-decoration:none;display:inline-flex;align-items:center;gap:.5rem;transition:all .3s;border-bottom:1px solid transparent}
+.producto-cta:hover{border-bottom-color:var(--burgundy);gap:.8rem}
+.producto-cta::after{content:'→';font-size:1rem;transition:transform .3s}
+.producto-cta:hover::after{transform:translateX(3px)}
+.badge{position:absolute;top:1.2rem;right:1.2rem;z-index:5;background:var(--burgundy);color:#fff;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.15em;padding:.4rem .8rem;font-family:'Cormorant Garamond',serif}
+.badge-gift{background:var(--gold)}
+.experiencia{background:var(--burgundy-deep);color:#fff;text-align:center;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden}
+.experiencia::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(197,164,126,.08) 0%,transparent 60%);pointer-events:none}
+.experiencia .section-label{color:var(--accent-pink)}
+.experiencia .section-heading{color:#fff}
+.experiencia .section-heading em{color:var(--accent-pink)}
+.experiencia .section-text{color:rgba(255,255,255,.65);margin:0 auto}
+.experiencia .concepto-divider{background:var(--accent-pink)}
+.detalle{background:var(--warm-white)}
+.detalle-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;margin-top:3.5rem}
+.detalle-visual{aspect-ratio:3/4;background:var(--blush-light);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.detalle-visual-text{font-family:'Playfair Display',serif;font-size:5rem;font-style:italic;color:var(--burgundy);opacity:.07;font-weight:800;text-align:center;line-height:1}
+.detalle-info h3{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,3vw,2.5rem);font-weight:700;margin-bottom:1rem;color:var(--charcoal)}
+.detalle-info .desc-emocional{font-size:1.1rem;font-style:italic;color:var(--burgundy);margin-bottom:2rem;line-height:1.6}
+.beneficios{list-style:none;margin-bottom:2rem}
+.beneficios li{padding:.7rem 0;border-bottom:1px solid rgba(107,29,58,.08);font-size:1rem;color:var(--charcoal);display:flex;align-items:center;gap:.8rem}
+.beneficios li::before{content:'✦';color:var(--burgundy);font-size:.65rem}
+.microcopy{font-size:.9rem;color:var(--soft-gray);font-style:italic;margin-bottom:2rem}
+.social{background:var(--blush-light);text-align:center;display:flex;flex-direction:column;align-items:center}
+.social-note{font-size:.85rem;color:var(--soft-gray);font-style:italic;margin-top:.5rem;margin-bottom:2rem}
+.social-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2.5rem;width:100%;max-width:900px}
+.social-quote{padding:2.5rem;background:var(--warm-white);position:relative}
+.social-quote::before{content:'"';font-family:'Playfair Display',serif;font-size:5rem;color:var(--burgundy);opacity:.12;position:absolute;top:.5rem;left:1.5rem;line-height:1}
+.social-quote p{font-family:'Libre Baskerville',serif;font-size:1.05rem;font-style:italic;line-height:1.8;color:var(--charcoal);position:relative;z-index:1}
+.social-quote .author{font-family:'Cormorant Garamond',serif;font-style:normal;font-size:.8rem;color:var(--soft-gray);margin-top:1.2rem;text-transform:uppercase;letter-spacing:.15em;display:block}
+.regalo{background:linear-gradient(135deg,var(--blush-light) 0%,var(--blush) 100%);text-align:center;display:flex;flex-direction:column;align-items:center}
+.regalo .section-text{margin:0 auto 2.5rem}
+.confianza{background:var(--cream);display:flex;flex-direction:column;align-items:center;text-align:center}
+.confianza-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2.5rem;margin-top:3rem;width:100%;max-width:900px}
+.confianza-item{display:flex;flex-direction:column;align-items:center;gap:.8rem}
+.confianza-icon{font-size:1.8rem;color:var(--burgundy)}
+.confianza-item h4{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--charcoal)}
+.confianza-item p{font-size:.9rem;color:var(--soft-gray);line-height:1.5}
+.diferencial{background:var(--warm-white);text-align:center;display:flex;flex-direction:column;align-items:center}
+.diferencial .big-statement{font-family:'Playfair Display',serif;font-size:clamp(1.3rem,2.5vw,2rem);color:var(--charcoal);line-height:1.6;max-width:600px;margin:2rem auto;font-weight:400}
+.diferencial .big-statement strong{color:var(--burgundy);font-weight:700}
+.cta-final{background:var(--burgundy);color:#fff;text-align:center;padding:7rem 4rem;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden}
+.cta-final::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 30%,rgba(255,255,255,.04) 0%,transparent 50%);pointer-events:none}
+.cta-final .section-heading{color:#fff;position:relative;z-index:1}
+.cta-final .btn-cta{background:#fff;color:var(--burgundy);border:none;padding:1.2rem 3rem;font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);margin-top:2.5rem;position:relative;z-index:1;text-decoration:none;display:inline-block}
+.cta-final .btn-cta:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.3);background:var(--blush)}
+footer{background:var(--charcoal);color:rgba(255,255,255,.5);padding:4rem}
+.footer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:3rem;max-width:1000px;margin:0 auto}
+.footer-col h4{font-family:'Playfair Display',serif;font-size:1.1rem;color:#fff;margin-bottom:1rem;font-weight:600}
+.footer-col p,.footer-col a{font-size:.9rem;line-height:1.8;color:rgba(255,255,255,.5);text-decoration:none;display:block;transition:color .3s}
+.footer-col a:hover{color:var(--accent-pink)}
+.footer-bottom{text-align:center;margin-top:3rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,.08);font-size:.8rem}
+.reveal{opacity:0;transform:translateY(25px);transition:all .8s cubic-bezier(.4,0,.2,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.15s}
+.reveal-delay-2{transition-delay:.3s}
+.reveal-delay-3{transition-delay:.45s}
+@media(max-width:768px){
+nav{padding:1rem 1.5rem}
+nav.scrolled{padding:.8rem 1.5rem}
+.nav-links{display:none}
+.hamburger{display:flex}
+section{padding:4.5rem 1.5rem}
+.productos-grid{grid-template-columns:1fr}
+.detalle-grid{grid-template-columns:1fr;gap:2.5rem}
+.social-grid{grid-template-columns:1fr}
+.confianza-grid{grid-template-columns:1fr 1fr}
+.cta-final{padding:4.5rem 1.5rem}
+footer{padding:3rem 1.5rem}
+.footer-grid{grid-template-columns:1fr;gap:2rem}
+}
+</style>
+</head>
+<body>
+
+<nav id="mainNav">
+  <a href="#" class="nav-logo">La excusa,</a>
+  <ul class="nav-links">
+    <li><a href="#concepto">Concepto</a></li>
+    <li><a href="#productos">Experiencias</a></li>
+    <li><a href="#detalle">Qué incluye</a></li>
+    <li><a href="#social">Historias</a></li>
+    <li><a href="#cta" class="btn-primary" style="padding:.5rem 1.5rem;font-size:.78rem;">Quiero mi excusa</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Menú"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#concepto" onclick="closeMobile()">Concepto</a>
+  <a href="#productos" onclick="closeMobile()">Experiencias</a>
+  <a href="#detalle" onclick="closeMobile()">Qué incluye</a>
+  <a href="#social" onclick="closeMobile()">Historias</a>
+  <a href="#cta" onclick="closeMobile()" style="color:var(--burgundy);font-weight:700;">Quiero mi excusa</a>
+</div>
+
+<section class="hero">
+  <div class="hero-content">
+    <img src="logo_la_excusa.png" alt="La Excusa" class="hero-logo-img" onerror="this.style.display='none';document.getElementById('fallbackLogo').style.display='block';">
+    <div id="fallbackLogo" style="display:none;font-family:'Playfair Display',serif;font-size:clamp(3rem,8vw,5rem);font-weight:800;color:var(--burgundy-deep);letter-spacing:-.03em;line-height:1;margin-bottom:2rem;">La<br>excusa,</div>
+    <p class="hero-tagline">Esto no es terapia… pero ayuda.</p>
+    <p class="hero-subtitle">La forma más simple de juntarte, desconectarte y crear algo con tus manos.</p>
+    <div class="hero-buttons">
+      <a href="#productos" class="btn-primary">Quiero mi excusa</a>
+      <a href="#concepto" class="btn-secondary">Cómo funciona</a>
+    </div>
+  </div>
+</section>
+
+<section class="concepto" id="concepto">
+  <span class="section-label reveal">El concepto</span>
+  <h2 class="section-heading reveal reveal-delay-1">No necesitas una razón.<br><em>Solo una excusa.</em></h2>
+  <div class="concepto-divider reveal reveal-delay-2"></div>
+  <p class="section-text reveal reveal-delay-2">Creamos experiencias para que juntarte deje de ser un plan pendiente y se convierta en algo que simplemente pasa.</p>
+</section>
+
+<section class="productos" id="productos">
+  <span class="section-label reveal">Experiencias</span>
+  <h2 class="section-heading reveal reveal-delay-1">Cada caja es un <em>concepto</em>,<br>no un kit.</h2>
+  <div class="productos-grid">
+    <div class="producto-card reveal reveal-delay-1">
+      <div class="producto-image" style="background:linear-gradient(135deg,var(--blush-light) 0%,var(--blush) 100%);">
+        <span class="badge">Primera edición</span>
+        <div class="producto-image-inner">01</div>
+        <div class="img-overlay">
+          <span class="producto-numero">Experiencia 01</span>
+          <h3 class="producto-nombre">La Pausa</h3>
+          <p class="producto-desc">Para bajar las revoluciones</p>
+        </div>
+      </div>
+      <div class="producto-body">
+        <p>Ese momento en que el mundo se detiene y solo queda lo que importa: las manos, la conversación y la risa.</p>
+        <div class="producto-precio">$24.990 <span>CLP</span></div>
+        <a href="#detalle" class="producto-cta">Quiero esta excusa</a>
+      </div>
+    </div>
+    <div class="producto-card reveal reveal-delay-2">
+      <div class="producto-image" style="background:linear-gradient(135deg,#F5E6E0 0%,var(--nude) 100%);">
+        <span class="badge badge-gift">Perfecto para regalar</span>
+        <div class="producto-image-inner">02</div>
+        <div class="img-overlay">
+          <span class="producto-numero">Experiencia 02</span>
+          <h3 class="producto-nombre">Lo que queda</h3>
+          <p class="producto-desc">Para crear y llevar</p>
+        </div>
+      </div>
+      <div class="producto-body">
+        <p>Porque los mejores recuerdos se crean con las manos. Algo que te acompaña después de que la junta termina.</p>
+        <div class="producto-precio">$27.990 <span>CLP</span></div>
+        <a href="#detalle" class="producto-cta">Quiero esta excusa</a>
+      </div>
+    </div>
+    <div class="producto-card reveal reveal-delay-3">
+      <div class="producto-image" style="background:linear-gradient(135deg,#EDE3DF 0%,#C9A99E 100%);">
+        <div class="producto-image-inner">03</div>
+        <div class="img-overlay">
+          <span class="producto-numero">Experiencia 03</span>
+          <h3 class="producto-nombre">Manos libres</h3>
+          <p class="producto-desc">Para ensuciarse y reírse</p>
+        </div>
+      </div>
+      <div class="producto-body">
+        <p>Sin reglas, sin presión. Solo la libertad de crear algo imperfecto y pasarlo increíble haciéndolo.</p>
+        <div class="producto-precio">$22.990 <span>CLP</span></div>
+        <a href="#detalle" class="producto-cta">Quiero esta excusa</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="experiencia">
+  <span class="section-label reveal">La experiencia</span>
+  <h2 class="section-heading reveal reveal-delay-1">No es lo que haces.<br><em>Es con quién lo haces.</em></h2>
+  <div class="concepto-divider reveal reveal-delay-2"></div>
+  <p class="section-text reveal reveal-delay-2">Una excusa para parar, conversar, reírte y desconectarte de todo lo demás.</p>
+</section>
+
+<section class="detalle" id="detalle">
+  <div class="detalle-grid">
+    <div class="detalle-visual reveal">
+      <div class="detalle-visual-text">Abre<br>la<br>caja</div>
+    </div>
+    <div class="detalle-info">
+      <span class="section-label reveal">Qué incluye</span>
+      <h3 class="reveal reveal-delay-1">Todo lo que necesitas.<br>Nada que te sobre.</h3>
+      <p class="desc-emocional reveal reveal-delay-2">Cada caja está diseñada para que solo tengas que llegar, abrir y empezar a crear.</p>
+      <ul class="beneficios reveal reveal-delay-2">
+        <li>Todo incluido — materiales, herramientas, inspiración</li>
+        <li>No necesitas experiencia — ni una pizca</li>
+        <li>Ideal para 2 a 4 personas</li>
+        <li>Instrucciones simples y visuales</li>
+        <li>Tiempo estimado: una velada perfecta</li>
+      </ul>
+      <p class="microcopy reveal reveal-delay-3">"Abres la caja y partes."</p>
+      <a href="#cta" class="btn-primary reveal reveal-delay-3">Quiero esta excusa</a>
+    </div>
+  </div>
+</section>
+
+<section class="social" id="social">
+  <span class="section-label reveal">Detrás de la caja</span>
+  <h2 class="section-heading reveal reveal-delay-1">Por qué creamos <em>esto</em></h2>
+  <p class="social-note reveal reveal-delay-1">Desde el equipo fundador</p>
+  <div class="social-grid">
+    <div class="social-quote reveal reveal-delay-1">
+      <p>Queríamos juntarnos más con nuestras amigas, pero siempre faltaba la excusa. Así que la creamos.</p>
+      <span class="author">— Equipo La Excusa</span>
+    </div>
+    <div class="social-quote reveal reveal-delay-2">
+      <p>La primera vez que probamos un prototipo, terminamos hablando hasta las 2 de la mañana. Ahí supimos que funcionaba.</p>
+      <span class="author">— Equipo La Excusa</span>
+    </div>
+    <div class="social-quote reveal reveal-delay-3">
+      <p>No inventamos nada nuevo. Solo empaquetamos lo que todas necesitábamos: un motivo para juntarnos.</p>
+      <span class="author">— Equipo La Excusa</span>
+    </div>
+  </div>
+</section>
+
+<section class="regalo">
+  <span class="section-label reveal">Para regalar</span>
+  <h2 class="section-heading reveal reveal-delay-1">El regalo que <em>nadie espera</em><br>y todas necesitan.</h2>
+  <div class="concepto-divider reveal reveal-delay-2"></div>
+  <p class="section-text reveal reveal-delay-2">Cumpleaños, despedidas, o simplemente porque sí. Regala una excusa para juntarse.</p>
+  <a href="#productos" class="btn-primary reveal reveal-delay-3" style="margin-top:1rem;">Ver opciones de regalo</a>
+</section>
+
+<section class="confianza">
+  <span class="section-label reveal">Compra tranquila</span>
+  <div class="confianza-grid">
+    <div class="confianza-item reveal reveal-delay-1">
+      <div class="confianza-icon">📦</div>
+      <h4>Envío seguro</h4>
+      <p>Despacho a todo Chile</p>
+    </div>
+    <div class="confianza-item reveal reveal-delay-2">
+      <div class="confianza-icon">🔒</div>
+      <h4>Pago seguro</h4>
+      <p>Webpay, transferencia o tarjeta</p>
+    </div>
+    <div class="confianza-item reveal reveal-delay-3">
+      <div class="confianza-icon">✦</div>
+      <h4>Todo incluido</h4>
+      <p>No necesitas comprar nada más</p>
+    </div>
+    <div class="confianza-item reveal reveal-delay-3">
+      <div class="confianza-icon">💬</div>
+      <h4>Atención directa</h4>
+      <p>Escríbenos por Instagram o WhatsApp</p>
+    </div>
+  </div>
+</section>
+
+<section class="diferencial">
+  <span class="section-label reveal">Lo que nos hace diferentes</span>
+  <h2 class="section-heading reveal reveal-delay-1">No vendemos kits.<br><em>Creamos momentos.</em></h2>
+  <div class="concepto-divider reveal reveal-delay-2"></div>
+  <p class="big-statement reveal reveal-delay-2">Cada caja está diseñada para generar algo que <strong>no se compra</strong>: tiempo de calidad.</p>
+</section>
+
+<section class="cta-final" id="cta">
+  <h2 class="section-heading reveal">¿Cuál será tu excusa<br><em style="color:var(--accent-pink);">hoy</em>?</h2>
+  <a href="#productos" class="btn-cta reveal reveal-delay-1">Quiero mi excusa</a>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h4>La excusa,</h4>
+      <p>Transformamos momentos simples en experiencias memorables.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Síguenos</h4>
+      <a href="https://instagram.com/laexcusa.cl" target="_blank" rel="noopener">Instagram →</a>
+      <a href="https://tiktok.com/@laexcusa.cl" target="_blank" rel="noopener">TikTok →</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contacto</h4>
+      <a href="/cdn-cgi/l/email-protection#bbd3d4d7dafbd7dadec3d8cec8da95d8d7"><span class="__cf_email__" data-cfemail="cda5a2a1ac8da1aca8b5aeb8beace3aea1">[email&#160;protected]</span></a>
+      <a href="https://wa.me/56912345678" target="_blank" rel="noopener">WhatsApp →</a>
+    </div>
+    <div class="footer-col">
+      <h4>Info</h4>
+      <a href="#">Envíos</a>
+      <a href="#">Cambios y devoluciones</a>
+      <a href="#">Preguntas frecuentes</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 La Excusa — Santiago, Chile</p>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+const nav=document.getElementById('mainNav');
+window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scrollY>80)});
+const hamburger=document.getElementById('hamburger');
+const mobileMenu=document.getElementById('mobileMenu');
+hamburger.addEventListener('click',()=>{
+hamburger.classList.toggle('active');
+mobileMenu.classList.toggle('active');
+document.body.style.overflow=mobileMenu.classList.contains('active')?'hidden':'';
+});
+function closeMobile(){hamburger.classList.remove('active');mobileMenu.classList.remove('active');document.body.style.overflow='';}
+const revealElements=document.querySelectorAll('.reveal');
+const revealOnScroll=()=>{revealEl
