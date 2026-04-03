@@ -120,7 +120,7 @@ footer{background:var(--charcoal);color:rgba(255,255,255,.5);padding:4rem}
 .footer-col p,.footer-col a{font-size:.9rem;line-height:1.8;color:rgba(255,255,255,.5);text-decoration:none;display:block;transition:color .3s}
 .footer-col a:hover{color:var(--accent-pink)}
 .footer-bottom{text-align:center;margin-top:3rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,.08);font-size:.8rem}
-.reveal{opacity:0;transform:translateY(25px);transition:all .8s cubic-bezier(.4,0,.2,1)}
+.reveal{opacity:1;transform:none;transition:all .8s cubic-bezier(.4,0,.2,1)}
 .reveal.visible{opacity:1;transform:translateY(0)}
 .reveal-delay-1{transition-delay:.15s}
 .reveal-delay-2{transition-delay:.3s}
@@ -345,7 +345,7 @@ footer{padding:3rem 1.5rem}
     </div>
     <div class="footer-col">
       <h4>Contacto</h4>
-      <a href="/cdn-cgi/l/email-protection#bbd3d4d7dafbd7dadec3d8cec8da95d8d7"><span class="__cf_email__" data-cfemail="cda5a2a1ac8da1aca8b5aeb8beace3aea1">[email&#160;protected]</span></a>
+      <a href="mailto:hola@laexcusa.cl">hola@laexcusa.cl</a>
       <a href="https://wa.me/56912345678" target="_blank" rel="noopener">WhatsApp →</a>
     </div>
     <div class="footer-col">
@@ -360,7 +360,7 @@ footer{padding:3rem 1.5rem}
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 const nav=document.getElementById('mainNav');
 window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scrollY>80)});
 const hamburger=document.getElementById('hamburger');
@@ -372,4 +372,10 @@ document.body.style.overflow=mobileMenu.classList.contains('active')?'hidden':''
 });
 function closeMobile(){hamburger.classList.remove('active');mobileMenu.classList.remove('active');document.body.style.overflow='';}
 const revealElements=document.querySelectorAll('.reveal');
-const revealOnScroll=()=>{revealEl
+const revealOnScroll=()=>{revealElements.forEach(el=>{if(el.getBoundingClientRect().top<window.innerHeight-80){el.classList.add('visible');}});};
+window.addEventListener('scroll',revealOnScroll);
+window.addEventListener('load',revealOnScroll);
+</script>
+
+</body>
+</html>
