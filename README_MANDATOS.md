@@ -23,7 +23,18 @@ Todas las carpetas y archivos se crean automáticamente si no existen.
 
 ## Instalación y ejecución local
 
-Requiere Python 3.10 o superior.
+Requiere Python 3.10 o superior ([python.org/downloads](https://www.python.org/downloads/);
+en Windows marque **"Add Python to PATH"** al instalar).
+
+### Forma fácil (sin escribir comandos)
+
+- **Windows:** doble clic en `INICIAR_APP.bat`.
+- **macOS / Linux:** ejecute `./iniciar_app.sh`.
+
+La primera vez instala todo automáticamente (tarda unos minutos); las
+siguientes veces abre la app directamente en el navegador.
+
+### Forma manual
 
 ```bash
 # 1. Crear y activar un entorno virtual
