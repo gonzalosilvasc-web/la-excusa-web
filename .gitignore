@@ -1,0 +1,7 @@
+# Datos locales de la aplicación (no versionar información sensible)
+database/
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
