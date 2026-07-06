@@ -1,63 +1,68 @@
-# TEST_REPORT — Sistema de Personerías y Demandas Ejecutivas
+# TEST_REPORT — Auditoría final de instalación y estabilidad
 
 **Fecha de ejecución:** 06/07/2026
 **Entorno de pruebas:** Linux (contenedor), Python 3.11.15, Streamlit 1.58.0
 **Suite automatizada:** `python tests/test_flujo.py` → **52/52 verificaciones PASAN**
+**Verificador:** `python check_install.py` → **todos los chequeos OK** (incluye seguridad)
 
-> Nota de transparencia: el entorno de pruebas es Linux, por lo que la
-> ejecución literal de `INICIAR_APP.bat` con doble clic en Windows no puede
-> realizarse aquí. Ese flujo se validó mediante: (a) revisión estática línea a
-> línea del `.bat` (sintaxis CMD, `%~dp0`, rutas entre comillas, `pause` en
-> todas las salidas de error), y (b) ejecución real del lanzador equivalente
-> `iniciar_app.sh` —misma lógica: detección de ZIP no extraído, detección de
-> Python, creación de venv, instalación y arranque— desde un ZIP limpio en una
-> ruta con espacios y tildes. Se recomienda al usuario confirmar el doble clic
-> en su Windows; cualquier falla sería del entorno, no de la lógica probada.
+> **Nota de transparencia sobre Windows:** el entorno de pruebas es Linux, por
+> lo que el doble clic literal de `INICIAR_APP.bat` no puede ejecutarse aquí
+> (no hay Windows ni Wine disponibles). El `.bat` se validó con: (a) revisión
+> estática completa (CRLF, ASCII puro sin tildes que rompan CMD, paréntesis
+> balanceados, todas las rutas entre comillas, `cd /d "%~dp0"`, `pause` en
+> TODAS las salidas de error), y (b) ejecución real de `iniciar_app.sh`, que
+> implementa exactamente la misma lógica paso a paso, en todos los escenarios
+> de falla y de éxito. El primer doble clic en un Windows real del usuario es
+> la única verificación pendiente; cualquier falla mostrará el bloque de
+> diagnóstico y la ventana quedará abierta.
 
-## Resumen
+## Pruebas obligatorias
 
-| # | Prueba | Resultado | Evidencia / Descripción | Observaciones / Corrección aplicada |
-|---|--------|-----------|--------------------------|--------------------------------------|
-| 1 | Instalación limpia desde ZIP | **PASA** | `git archive` → ZIP → extracción → `iniciar_app.sh`: creó `.venv`, instaló dependencias, arrancó Streamlit; HTTP 200 en ~50 s + interfaz verificada en Chromium real (9 pestañas, título, advertencia legal). El `.bat` replica la misma lógica y fue verificado estáticamente (ver nota). | La ventana no se cierra sola: todas las rutas de error del `.bat` terminan en `pause`. |
-| 2 | Ruta compleja (espacios/tildes/OneDrive) | **PASA** | Ejecutado desde `…/OneDrive - Estudio Jurídico/Descargas Peñá/sistema-personerias-demandas` — instaló y sirvió la app correctamente. | Todas las rutas del `.bat`/`.sh` van entre comillas; `cd /d "%~dp0"`. |
-| 3 | Sin API key | **PASA** | Suite §2: `ocr_disponible() == False`; extracción retorna "No hay API key configurada. Puede ingresar los datos manualmente."; toda la suite (mandatos, casos, generación) corre sin ninguna API key. UI muestra "OCR/IA: ❌ no configurado" (captura Chromium). | — |
-| 4 | Mandato | **PASA** | Suite §3: guarda en `mandatos.xlsx`, guarda PDF con nombre sanitizado, genera texto de personería exacto, detecta vigente por fecha (fuzzy > 85 con tildes/orden alterado), excluye revocados, y aísla el caso `Fecha_Revocacion == Fecha_Instrumento` con la advertencia de mismo día. Duplicados detectados. | — |
-| 5 | Modelo Word | **PASA** | Suite §4: plantilla con placeholders → detecta 19 variables (`PETITORIO`, `TITULOS_EJECUTIVOS`, `TEXTO_PERSONERIA`, …) y queda seleccionable. Plantilla sin placeholders → `Activo=False` (generación automática bloqueada), advertencia con 3 opciones y copia con placeholders sugeridos generada. | Corrección: la plantilla base de fábrica no incluía `{{TEXTO_PERSONERIA}}`; se agregó al tercer otrosí. |
-| 6 | Caso simple (pagaré en pesos) | **PASA** | Suite §5: caso con carpeta propia, documento guardado, instrumento + deudor registrados, clasificador sugiere "Cobro de pagaré en pesos" (confianza alta), demanda `.docx` generada en `generated_demands/` con contexto JSON, sin placeholders residuales, revisión sin errores críticos, auditoría registrada. | Corrección: el monto original (opcional) inyectaba `NO_DETECTADO` al cuerpo y bloqueaba; ahora se omite la frase si no consta (el saldo insoluto sigue siendo crítico y bloqueante). |
-| 7 | Múltiples pagarés | **PASA** | Suite §6: 2 pagarés ($10M + $5M) suman $15.000.000; avalista limitada al pagaré N° 111 genera petitorio con "limitada exclusivamente… título(s) N° 111"; si se le pide $15M (más de lo que garantizó) → **error crítico `responsabilidad` y bloqueo**. | — |
-| 8 | Error cuerpo–petitorio | **PASA** | Suite §7: (a) avalista en el cuerpo eliminada del petitorio → bloqueo con mensaje "Rosa Sottorff Muñoz aparece como avalista en el cuerpo…, pero no aparece demandado/a en el petitorio" + cómo corregirlo; (b) demandada en petitorio sin respaldo en el cuerpo → bloqueo. | — |
-| 9 | Placeholders pendientes | **PASA** | Suite §8: `{{FALTA_ESTE_DATO}}` dejado en el relato → error crítico que indica exactamente cuál placeholder falta; descarga bloqueada. También bloquea campos críticos `NO_DETECTADO` (ej. bienes de embargo) indicando el campo. | — |
-| 10 | Comentarios internos | **PASA** | Suite §8: `[EA1.1]`, `[COMPLETAR]`, `xxx`, `pendiente`, `revisar` — cada uno detectado en el Word renderizado → error crítico y bloqueo. | — |
-| 11 | Excel abierto | **PASA** | Suite §9: `PermissionError` al reemplazar `mandatos.xlsx` → `ExcelAbiertoError` con mensaje "…está abierto en otro programa (probablemente Excel). Cierre el archivo y vuelva a intentar."; el archivo original quedó intacto (escritura atómica). | Simulado interceptando `os.replace` (en Linux no existe el bloqueo de archivos de Excel). La UI captura esta excepción en todos los flujos de guardado. |
-| 12 | Auditoría | **PASA** | Suite §10: `audit_log.xlsx` registra CARGA_MANDATO, CARGA_MODELO/creación, CREACION_CASO, ALTA_INSTRUMENTO/PARTE, GENERACION_DEMANDA, GENERACION_BLOQUEADA_REVISION y DESCARGA_DEMANDA. | — |
-| 13 | Confidencialidad | **PASA** | `git check-ignore` confirma exclusión de `.env` y `database/` (Excels, PDFs, demandas, respaldos, temp, casos). `git status` no muestra ningún archivo de datos; el ZIP generado no contiene documentos sensibles. La UI exige checkbox de autorización + advertencia de confidencialidad antes de enviar cualquier documento a IA externa. | La estructura se crea automáticamente al primer arranque (no se necesita versionar `database/`). |
-| 14 | Usuario no técnico | **PASA** | Flujo completo replicado: ZIP → extraer → un solo comando de lanzador (equivalente al doble clic) → app abierta en navegador real (captura Chromium: título, 9 pestañas, botón de datos de ejemplo). Cargar mandato/modelo/caso/demanda cubiertos por las pruebas 4–6 usando la misma lógica que invoca la UI. | El README trae instrucciones paso a paso; `check_install.py` da diagnóstico completo (14 chequeos [OK]). |
+| # | Prueba | Resultado | Evidencia | Observaciones / Corrección aplicada |
+|---|--------|-----------|-----------|--------------------------------------|
+| 1 | Instalación limpia desde ZIP | **PASA** | ZIP generado con `git archive` desde la rama final → extraído en carpeta nueva → ejecutado SOLO el lanzador → creó `.venv`, instaló dependencias, sirvió la app (HTTP 200 en ~35 s) y la interfaz completa se verificó en un navegador Chromium real (título, 9 pestañas, barra de estado). Raíz del ZIP verificada: los 11 archivos requeridos presentes. | El lanzador imprime la versión de Python detectada y la carpeta del proyecto al inicio. |
+| 2 | Ruta compleja (espacios/tildes/OneDrive) | **PASA** | Toda la prueba 1 se ejecutó dentro de `…/OneDrive - Estudio Jurídico/Descargas Peñá/sistema-personerias-demandas` (espacios + tildes + eñes). | `.bat`/`.sh`: todas las rutas van entre comillas; el `.bat` es ASCII puro para evitar problemas de codificación en CMD. |
+| 3 | Sin API key | **PASA** | Instalación y ejecución completas sin `OPENAI_API_KEY` ni `GOOGLE_API_KEY`: la app arranca, muestra "OCR/IA: ❌ no configurado", y el mensaje de extracción es "No hay API key configurada. Puede ingresar los datos manualmente." Toda la suite (mandatos, casos, demandas) corre sin API. | Corrección adicional: los SDKs de IA se movieron a `requirements-ia.txt` (opcionales) para que la instalación base jamás falle por ellos; si hay API key pero falta el SDK, la app lo explica con el comando exacto. |
+| 4 | Falta Python | **PASA** | Ejecutado `iniciar_app.sh` con un PATH sin Python: bloque de error claro — "Paso que falló: 2 - Detección de Python / Qué debe hacer: Instálelo desde python.org…". El `.bat` tiene la misma rama (`where python` / `where py`) con instrucciones de instalación y "Add Python to PATH", terminando en `pause`. | También se valida versión mínima 3.10 con mensaje propio. |
+| 5 | Falta `requirements.txt` | **PASA** | Carpeta de prueba solo con lanzador + `app.py`: bloque de error "Falta el archivo requirements.txt… Vuelva a extraer el ZIP COMPLETO", con ruta del proyecto y ubicaciones de archivos; exit 1 sin cierre abrupto. Misma rama en el `.bat` con `pause`. | — |
+| 6 | Falta `app.py` | **PASA** | Carpeta de prueba solo con lanzador + `requirements.txt`: bloque de error "Falta el archivo app.py…", diagnóstico completo. Caso adicional: si faltan AMBOS archivos → mensaje "Debe extraer el ZIP antes de ejecutar la aplicación" con pasos para extraer. | La detección de ZIP-no-extraído se probó explícitamente (carpeta solo con el lanzador). |
+| 7 | Excel abierto | **PASA** | Suite §9: `PermissionError` al reemplazar `mandatos.xlsx` → `ExcelAbiertoError`: "…está abierto en otro programa (probablemente Excel). Cierre el archivo y vuelva a intentar."; el archivo original quedó intacto (escritura atómica: temporal → validación → reemplazo). Todos los flujos de guardado de la UI capturan esta excepción. | Simulado interceptando `os.replace` (en Linux no existe el bloqueo de archivos de Excel). |
+| 8 | Datos de ejemplo (mandato/modelo/caso/demanda) | **PASA** | (a) Botón "Cargar datos de ejemplo" pulsado en navegador real → métrica Mandatos = 3; búsqueda "maria soto perez" → personería vigente encontrada y texto legal generado (verificado en pantalla). (b) Suite §3–§5: mandato guardado con PDF, modelo Word cargado con 19 placeholders detectados, caso creado con carpeta e instrumento/parte, y demanda `.docx` generada en `generated_demands/` sin placeholders residuales. | Modelo base de fábrica incluido para que la generación funcione sin cargar modelos propios. |
+| 9 | Revisor jurídico (bloqueos) | **PASA** | Suite §6–§8, todos con bloqueo de descarga y explicación con "cómo corregirlo": placeholders pendientes (`{{FALTA_ESTE_DATO}}` indicado por nombre); comentarios internos `[EA1.1]`, `[COMPLETAR]`, `xxx`, `pendiente`, `revisar` (cada uno probado); avalista en el cuerpo ausente del petitorio; demandada en el petitorio sin respaldo en el cuerpo; monto contra avalista superior a los títulos que garantizó; y además: campo crítico `NO_DETECTADO`, personería posterior al título, USD sin equivalencia en pesos, caso sin títulos ejecutivos. | El revisor opera sobre el texto del Word realmente renderizado + los datos estructurados. |
+| 10 | Auditoría | **PASA** | Suite §10: `audit_log.xlsx` registra CARGA_MANDATO, CREACION_CASO, ALTA_INSTRUMENTO, ALTA_PARTE, GENERACION_DEMANDA, GENERACION_BLOQUEADA_REVISION y DESCARGA_DEMANDA. Respaldos con timestamp en `database/backups/` antes de cada escritura. | — |
+| 11 | Seguridad / confidencialidad | **PASA** | `check_install.py`: `git ls-files` confirma que NO hay `.env`, `database/`, PDFs ni Excels versionados; sin documentos sueltos en la raíz; `.gitignore` verificado automáticamente (excluye `.env`, `database/`, `*.xlsx`, `*.pdf`, respaldos, temporales). El ZIP final contiene solo código y documentación. La UI exige checkbox de autorización + advertencia de confidencialidad antes de enviar documentos a IA externa. | Los únicos Excel/PDF del sistema se crean localmente en `database/` (excluida de git) al primer arranque. |
 
-## Verificaciones adicionales
+## Verificaciones adicionales de la auditoría
 
-- **Arranque sin excepciones:** `streamlit.testing.v1.AppTest` ejecuta `app.py`
-  completo → 0 excepciones, 9 pestañas renderizadas.
-- **`check_install.py`:** 14/14 chequeos OK (Python 3.11, archivos, carpetas,
-  dependencias, estructura `database/`, Streamlit ejecutable).
-- **Personería vs fecha del título (regla 15):** mandato otorgado después del
-  título más antiguo → error crítico y bloqueo (suite §8).
-- **USD/UF sin equivalencia en pesos (regla 8):** bloqueo con instrucción de
-  acompañar certificado (suite §8).
-- **Clasificador (módulo 6):** pagaré en pesos / en dólares / múltiples /
-  mutuo hipotecario / tercero poseedor / caso sin títulos (bloqueo) — todos
-  correctos (suite §11).
-- **Respaldos:** copias con timestamp en `database/backups/` antes de cada
-  escritura (suite §10).
+- **`check_install.py` ampliado y ejecutado:** Python (con aviso para 3.13+),
+  archivos y carpetas, **permisos de escritura reales**, dependencias
+  críticas + IA opcionales, autocreación de `database/`, cobertura de
+  `.gitignore`, escaneo de archivos sensibles versionados y Streamlit
+  ejecutable → **todo OK, exit 0**.
+- **`DIAGNOSTICO.bat` creado:** chequea Python, pip, venv, permisos de
+  escritura, archivos y ejecuta `check_install.py`; siempre termina en
+  `pause`. Validado estáticamente (ASCII, CRLF, paréntesis balanceados).
+- **Arranque sin excepciones:** `streamlit.testing.v1.AppTest` ejecuta
+  `app.py` completo tras la auditoría → 0 excepciones.
+- **`.bat` saneado:** 0 bytes no-ASCII, CRLF en 160 líneas, paréntesis
+  balanceados, sin expansión retardada (soporta rutas con `!` y especiales).
+- **Sin rutas absolutas ni credenciales:** todas las rutas derivan de
+  `Path(__file__)`/`%~dp0`; API keys solo por variables de entorno/.env local.
 
-## Fallas encontradas y corregidas durante las pruebas
+## Correcciones aplicadas en esta auditoría
 
-1. Plantilla base sin `{{TEXTO_PERSONERIA}}` → agregado al tercer otrosí.
-2. `NO_DETECTADO` del monto original (dato opcional) bloqueaba casos válidos →
-   la frase se omite si el dato no consta; el saldo insoluto sigue bloqueando.
-3. Ajustes de la propia suite (revisar el texto del Word renderizado, como hace
-   la app, en lugar de concatenar el contexto; tipos de pandas).
+1. Mensajes de error del lanzador diferenciados (antes, la falta de un solo
+   archivo mostraba el mensaje genérico de ZIP; ahora cada caso tiene el suyo)
+   y bloque de diagnóstico completo (paso, causa, solución, ruta, versión de
+   Python, ubicación de `app.py` y `requirements.txt`).
+2. Dependencias de IA separadas a `requirements-ia.txt` para blindar la
+   instalación base (con mensaje claro en la app si falta el SDK).
+3. `check_install.py` ampliado (escritura, seguridad, `.gitignore`).
+4. `DIAGNOSTICO.bat` nuevo.
+5. README reescrito para usuario no técnico con solución de problemas
+   (SmartScreen, Python, ZIP, Excel abierto, OneDrive, `.venv` corrupto).
 
-**Conclusión:** todas las pruebas obligatorias ejecutables en este entorno
-PASAN. Pendiente únicamente la confirmación del doble clic de
-`INICIAR_APP.bat` en un Windows real del usuario (lógica ya validada por la
-vía equivalente).
+**Conclusión:** las 11 pruebas obligatorias PASAN en este entorno. Único
+punto no ejecutable aquí: el doble clic físico en un Windows real (lógica
+equivalente probada; ante cualquier falla la ventana queda abierta con
+diagnóstico y existe `DIAGNOSTICO.bat`).
