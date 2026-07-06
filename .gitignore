@@ -1,0 +1,26 @@
+# --- Credenciales: NUNCA versionar ---
+.env
+
+# --- Datos sensibles locales: base completa, PDFs de clientes, demandas ---
+database/
+*.xlsx
+*.pdf
+!docs/*.pdf
+
+# --- Documentos reales / temporales / respaldos ---
+temp/
+backups/
+generated_demands/
+pdf_storage/
+cases/
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# --- Sistema operativo / editores ---
+.DS_Store
+Thumbs.db
