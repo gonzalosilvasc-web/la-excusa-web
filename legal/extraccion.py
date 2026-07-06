@@ -204,8 +204,14 @@ def extract_document_data(pdf_path: str, tipo_documento: str) -> dict[str, Any]:
             crudo = _llamar_openai(contenido, ruta.name, prompt)
         else:
             crudo = _llamar_google(contenido, prompt)
-    except ImportError as exc:
-        return {"_error": f"Falta el SDK del proveedor '{provider}': {exc}"}
+    except ImportError:
+        return {
+            "_error": (
+                f"El SDK del proveedor '{provider}' no está instalado. Las "
+                "dependencias de IA son opcionales: instálelas con "
+                "«pip install -r requirements-ia.txt» o use el modo manual."
+            )
+        }
     except Exception as exc:  # errores de red/API externas
         return {"_error": f"Error al llamar a la API de {provider}: {exc}"}
 

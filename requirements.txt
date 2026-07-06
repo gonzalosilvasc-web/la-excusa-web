@@ -1,12 +1,15 @@
-# Núcleo (compatible con Python 3.10–3.12)
+# Dependencias del sistema (probadas con Python 3.11; compatibles 3.10–3.13).
+# Nota: en Python muy reciente (3.13/3.14) use siempre las últimas versiones
+# que instala este archivo; si pip fallara con una versión nueva de Python,
+# instale Python 3.11 o 3.12 (recomendado).
 streamlit>=1.35.0
-pandas>=2.0.0
+pandas>=2.2.0
 openpyxl>=3.1.0
-rapidfuzz>=3.0.0
+rapidfuzz>=3.5.0
 docxtpl>=0.16.7
 python-docx>=1.1.0
 python-dotenv>=1.0.0
 
-# Proveedores OCR/IA multimodal (opcionales — solo se usan si hay API key)
-openai>=1.30.0
-google-generativeai>=0.7.0
+# Las dependencias de IA (OpenAI / Gemini) son OPCIONALES y están en
+# requirements-ia.txt para que la instalación base nunca falle por ellas.
+# La app funciona 100% en modo manual sin instalarlas.

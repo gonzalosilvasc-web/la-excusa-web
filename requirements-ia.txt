@@ -1,0 +1,6 @@
+# Dependencias OPCIONALES para la extracción automática con IA.
+# Instálelas SOLO si va a usar una API key de OpenAI o Google:
+#     .venv\Scripts\python.exe -m pip install -r requirements-ia.txt   (Windows)
+#     .venv/bin/python -m pip install -r requirements-ia.txt           (Mac/Linux)
+openai>=1.30.0
+google-generativeai>=0.7.0
