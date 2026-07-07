@@ -84,3 +84,43 @@ las ejecuciones reales del `.bat` bajo Wine en sus rutas de error.
 este entorno) — el primer doble clic del usuario es la verificación
 definitiva; ante cualquier falla la ventana queda abierta con diagnóstico y
 `DIAGNOSTICO.bat` entrega el reporte completo para soporte.
+
+
+## Adenda 07/07/2026 — Verificación de demo end-to-end (pre-presentación)
+
+Pasada de perfeccionamiento previa a la presentación a gerencia. Se ejecutó
+el **flujo completo del generador dentro de la interfaz real** (framework
+oficial `streamlit.testing.v1.AppTest`), además de re-correr toda la suite
+(52/52 PASAN) y `check_install.py` (OK).
+
+Flujo verificado de punta a punta en la UI: cargar datos de demostración →
+buscar personería (con autocompletado del representante) → componer demanda
+→ revisión aprobada → **editar el petitorio tras revisar invalida la
+revisión** → marca `[COMPLETAR]` bloquea la descarga → corregir → re-revisar
+→ checklist de 8 puntos → **generar Word final** (verificado: sin
+placeholders, con demandados, personería y costas) → estado del caso y
+auditoría actualizados → cambio de caso limpia el estado del generador.
+
+### Defectos encontrados y corregidos en esta pasada
+
+1. **Crash al generar la demanda** (`TypeError ... dtype 'float64'`):
+   `actualizar_caso` fallaba al escribir el tipo de demanda porque la
+   columna vacía llegaba tipada como numérica desde Excel. Habría ocurrido
+   exactamente al presionar "Generar demanda final". Corregido con coerción
+   a `object` y cubierto por la prueba E2E.
+2. **Revisión obsoleta reutilizable**: tras aprobar la revisión se podía
+   editar el texto y generar sin re-revisar. Ahora una huella SHA-256 del
+   contenido invalida la revisión ante cualquier cambio (probado).
+3. **Estado cruzado entre casos**: al cambiar de caso persistían contexto,
+   revisión, personería y demanda del caso anterior. Ahora todo se limpia al
+   cambiar de caso (probado).
+4. **Representante no se autocompletaba** al encontrar la personería si el
+   campo ya existía en pantalla. Corregido (probado).
+5. **Datos de ejemplo duplicables**: el botón ahora es idempotente y además
+   crea un caso de demostración completo listo para generar (probado con
+   doble clic: 3 mandatos, 1 caso).
+6. **Advertencias de API obsoleta** (`use_container_width`) eliminadas de la
+   consola visible; requisito de Streamlit actualizado a >=1.50.
+
+Se agregó `GUIA_DEMO.md` con el guion de presentación, checklist previo y
+plan B ante imprevistos.

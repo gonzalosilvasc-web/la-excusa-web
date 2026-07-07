@@ -80,6 +80,20 @@ except ImportError:
 # Helpers de UI
 # ---------------------------------------------------------------------------
 
+CAMPOS_EDITABLES = ("DEMANDADOS", "TITULOS_EJECUTIVOS", "RELATO_DE_LOS_HECHOS",
+                    "PETITORIO", "DOCUMENTOS_PRIMER_OTROSI")
+
+
+def _huella_contexto(contexto: dict[str, str]) -> str:
+    """Huella del contenido de la demanda para invalidar revisiones obsoletas."""
+    import hashlib
+
+    m = hashlib.sha256()
+    for k in sorted(contexto):
+        m.update(f"{k}={contexto[k]}\n".encode("utf-8"))
+    return m.hexdigest()
+
+
 def _mostrar_error_excel(exc: ExcelAbiertoError) -> None:
     st.error(f"📛 {exc}")
 
@@ -148,7 +162,7 @@ def tab_consulta() -> None:
 
     if not resultado["mismo_dia"].empty:
         st.warning(MSG_REVOCACION_MISMO_DIA)
-        st.dataframe(resultado["mismo_dia"], use_container_width=True, hide_index=True)
+        st.dataframe(resultado["mismo_dia"], width="stretch", hide_index=True)
 
     mandato = resultado["vigente"]
     if mandato is None:
@@ -166,7 +180,7 @@ def tab_consulta() -> None:
         f"{mandato['Repertorio']} | {mandato['ID_Mandato']}"
     )
     st.dataframe(pd.DataFrame([mandato]).drop(columns=["_score"], errors="ignore"),
-                 use_container_width=True, hide_index=True)
+                 width="stretch", hide_index=True)
 
     if not es_verdadero(mandato.get("Facultad_Pagare")):
         st.error(
@@ -305,7 +319,7 @@ def tab_carga_mandatos() -> None:
     if pendiente:
         st.warning("⚠️ Posible duplicado (misma entidad, ejecutivo, fecha y repertorio):")
         st.dataframe(pd.DataFrame(pendiente["duplicados"]),
-                     use_container_width=True, hide_index=True)
+                     width="stretch", hide_index=True)
         c1, c2 = st.columns(2)
         with c1:
             if st.button("✅ Guardar de todos modos", key="m_dup_si"):
@@ -497,7 +511,7 @@ def tab_biblioteca() -> None:
     if df.empty:
         st.info("Aún no hay modelos en la biblioteca.")
     else:
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
 
 
 # ---------------------------------------------------------------------------
@@ -590,7 +604,7 @@ def tab_nuevo_caso() -> None:
 
     st.divider()
     st.markdown("### Casos existentes")
-    st.dataframe(df_casos, use_container_width=True, hide_index=True)
+    st.dataframe(df_casos, width="stretch", hide_index=True)
 
 
 # ---------------------------------------------------------------------------
@@ -758,7 +772,7 @@ def tab_extraccion() -> None:
         _mostrar_error_excel(exc)
         return
     if not df_inst.empty:
-        st.dataframe(df_inst, use_container_width=True, hide_index=True)
+        st.dataframe(df_inst, width="stretch", hide_index=True)
         borrar = st.selectbox("Eliminar instrumento",
                               ["(ninguno)"] + df_inst["ID_Instrumento"].tolist(),
                               key="e_del_inst")
@@ -828,7 +842,7 @@ def tab_extraccion() -> None:
         _mostrar_error_excel(exc)
         return
     if not df_partes.empty:
-        st.dataframe(df_partes, use_container_width=True, hide_index=True)
+        st.dataframe(df_partes, width="stretch", hide_index=True)
         borrar_p = st.selectbox("Eliminar parte",
                                 ["(ninguna)"] + df_partes["ID_Parte"].tolist(),
                                 key="e_del_parte")
@@ -862,6 +876,15 @@ def tab_generador() -> None:
         f"{df_casos.loc[df_casos['ID_Caso'] == i, 'Cliente_Deudor'].iloc[0]}",
         key="g_caso",
     )
+    # Al cambiar de caso se descarta todo estado del caso anterior (contexto,
+    # revisión, personería y demanda generada) para evitar mezclas.
+    if st.session_state.get("g_caso_actual") != id_caso:
+        for k in ("g_contexto", "g_revision", "g_revision_ok", "g_rev_hash",
+                  "g_mandato", "g_generada", "g_generada_id"):
+            st.session_state.pop(k, None)
+        for campo in CAMPOS_EDITABLES:
+            st.session_state.pop(f"g_edit_{campo}", None)
+        st.session_state["g_caso_actual"] = id_caso
     caso = df_casos[df_casos["ID_Caso"] == id_caso].iloc[0]
     df_inst = mod_casos.cargar_instrumentos(id_caso)
     df_partes = mod_casos.cargar_partes(id_caso)
@@ -943,6 +966,9 @@ def tab_generador() -> None:
             st.session_state.pop("g_mandato", None)
         else:
             st.session_state["g_mandato"] = res["vigente"].to_dict()
+            # Autocompletar el representante que comparece si está vacío
+            if not str(st.session_state.get("g_rep", "")).strip():
+                st.session_state["g_rep"] = str(res["vigente"]["Nombre_Ejecutivo"])
     mandato = st.session_state.get("g_mandato")
     if mandato:
         st.success(
@@ -963,9 +989,11 @@ def tab_generador() -> None:
         demandante = st.text_input("Demandante", value=str(caso["Banco_Entidad"]),
                                    key="g_demandante")
         rut_demandante = st.text_input("RUT demandante", key="g_rut_dem")
+        st.session_state.setdefault(
+            "g_rep", str(mandato["Nombre_Ejecutivo"]) if mandato else ""
+        )
         representante = st.text_input(
-            "Abogado/representante que comparece *",
-            value=str(mandato["Nombre_Ejecutivo"]) if mandato else "", key="g_rep",
+            "Abogado/representante que comparece *", key="g_rep",
         )
     with c2:
         bienes = st.text_area("Bienes para la traba de embargo *", key="g_bienes")
@@ -987,7 +1015,12 @@ def tab_generador() -> None:
         }
         contexto = mod_gen.componer_contexto(caso, df_inst, df_partes, mandato, campos)
         st.session_state["g_contexto"] = contexto
-        st.session_state.pop("g_revision_ok", None)
+        # Refrescar los bloques editables con el nuevo contenido compuesto
+        for campo in CAMPOS_EDITABLES:
+            st.session_state[f"g_edit_{campo}"] = contexto[campo]
+        for k in ("g_revision", "g_revision_ok", "g_rev_hash", "g_generada",
+                  "g_generada_id"):
+            st.session_state.pop(k, None)
 
     contexto = st.session_state.get("g_contexto")
     if not contexto:
@@ -999,14 +1032,26 @@ def tab_generador() -> None:
         "Revise y edite los bloques generados. Los textos con NO_DETECTADO "
         "deben completarse con datos reales — la app no los inventa."
     )
-    for campo, alto in [
-        ("DEMANDADOS", 120), ("TITULOS_EJECUTIVOS", 160),
-        ("RELATO_DE_LOS_HECHOS", 160), ("PETITORIO", 200),
-        ("DOCUMENTOS_PRIMER_OTROSI", 120),
-    ]:
-        contexto[campo] = st.text_area(campo, value=contexto[campo],
-                                       height=alto, key=f"g_edit_{campo}")
+    alturas = {"DEMANDADOS": 120, "TITULOS_EJECUTIVOS": 160,
+               "RELATO_DE_LOS_HECHOS": 160, "PETITORIO": 200,
+               "DOCUMENTOS_PRIMER_OTROSI": 120}
+    for campo in CAMPOS_EDITABLES:
+        st.session_state.setdefault(f"g_edit_{campo}", contexto[campo])
+        contexto[campo] = st.text_area(campo, height=alturas[campo],
+                                       key=f"g_edit_{campo}")
     st.session_state["g_contexto"] = contexto
+
+    # Si el contenido cambió DESPUÉS de una revisión aprobada, la revisión
+    # queda invalidada: nunca se genera texto distinto al revisado.
+    huella_actual = _huella_contexto(contexto)
+    if "g_revision" in st.session_state and \
+            st.session_state.get("g_rev_hash") != huella_actual:
+        st.session_state.pop("g_revision", None)
+        st.session_state.pop("g_revision_ok", None)
+        st.info(
+            "El contenido de la demanda cambió después de la última revisión. "
+            "Vuelva a ejecutar la revisión jurídica antes de generar."
+        )
 
     # --- Revisión jurídica ---
     st.divider()
@@ -1029,6 +1074,7 @@ def tab_generador() -> None:
                                            mandato, texto_final)
         st.session_state["g_revision"] = revision
         st.session_state["g_revision_ok"] = not revision.bloquea_descarga
+        st.session_state["g_rev_hash"] = _huella_contexto(contexto)
         if revision.bloquea_descarga:
             registrar_auditoria(
                 "GENERACION_BLOQUEADA_REVISION", "", id_caso=id_caso,
@@ -1200,7 +1246,7 @@ def tab_historial() -> None:
         st.info("Aún no hay demandas generadas.")
         return
     st.dataframe(df.sort_index(ascending=False),
-                 use_container_width=True, hide_index=True)
+                 width="stretch", hide_index=True)
     id_dda = st.selectbox("Descargar demanda", df["ID_Demanda"].tolist(), key="h_dda")
     fila = df[df["ID_Demanda"] == id_dda].iloc[0]
     ruta = BASE_DIR / str(fila["Archivo"])
@@ -1230,7 +1276,7 @@ def tab_auditoria() -> None:
         st.info("Aún no hay registros de auditoría.")
     else:
         st.dataframe(log.sort_index(ascending=False),
-                     use_container_width=True, hide_index=True)
+                     width="stretch", hide_index=True)
 
 
 # ---------------------------------------------------------------------------
@@ -1238,25 +1284,81 @@ def tab_auditoria() -> None:
 # ---------------------------------------------------------------------------
 
 def cargar_datos_ejemplo() -> None:
-    """Mandatos de ejemplo para probar la búsqueda (solo datos ficticios)."""
+    """Datos ficticios de demostración. Es idempotente: puede presionarse el
+    botón varias veces sin crear duplicados."""
     ejemplos = [
-        ("María Fernanda Soto Pérez", "Banco Santander", "15/03/2022", None,
-         "Juan Ricardo San Martín Urrejola", "Santiago", "12345-2022"),
+        ("María Fernanda Soto Pérez", "Banco Santander", "15/03/2019", None,
+         "Juan Ricardo San Martín Urrejola", "Santiago", "12345-2019"),
         ("Pedro Antonio Rojas Díaz", "Banco Santander", "10/01/2020", "20/06/2023",
          "Iván Torrealba Acevedo", "Santiago", "9876-2020"),
         ("Carolina Andrea Muñoz Lagos", "GRC", "05/08/2021", None,
          "Patricio Raby Benavente", "Valparaíso", "4455-2021"),
     ]
+    df_m = mod_mand.cargar_mandatos()
     for nom, ent, fo, fr, notario, ciudad, rep in ejemplos:
+        ya_existe = not mod_mand.detectar_duplicados(
+            df_m, ent, normalizar_nombre(nom), parsear_fecha(fo), rep
+        ).empty
+        if ya_existe:
+            continue
         mod_mand.guardar_mandato({
             "Nombre_Ejecutivo": nom, "Entidad_Representada": ent,
             "Fecha_Otorgamiento": fo, "Fecha_Revocacion": fr,
             "Notario_Titular": notario, "Ciudad_Notaria": ciudad,
             "Repertorio": rep, "Facultad_Pagare": True,
-            "Texto_Facultad_Pagare": "Facultad expresa de suscribir pagarés (ejemplo).",
+            "Texto_Facultad_Pagare": "El mandatario podrá suscribir, aceptar y "
+            "renovar pagarés y demás títulos de crédito (texto de ejemplo).",
             "Usuario_Carga": "sistema_ejemplo",
             "Observaciones": "Dato de ejemplo ficticio.",
         })
+
+    # Caso de demostración completo, listo para generar una demanda
+    df_c = mod_casos.cargar_casos()
+    if not df_c.empty and (df_c["Numero_Operacion"] == "DEMO-2024-001").any():
+        return
+    caso = mod_casos.crear_caso({
+        "Banco_Entidad": "Banco Santander",
+        "Cliente_Deudor": "Comercial Los Álamos Limitada",
+        "RUT_Deudor": "76.111.222-3",
+        "Numero_Operacion": "DEMO-2024-001",
+        "Usuario_Carga": "sistema_ejemplo",
+        "Observaciones": "Caso de demostración con datos ficticios.",
+    })
+    id_caso = caso["ID_Caso"]
+    inst1 = mod_casos.agregar_instrumento(id_caso, {
+        "Tipo_Instrumento": "Pagare", "Numero_Instrumento": "296134",
+        "Fecha_Suscripcion": parsear_fecha("10/05/2022"),
+        "Fecha_Mora": parsear_fecha("01/02/2024"),
+        "Banco_Acreedor": "Banco Santander", "Entidad_Acreedora": "Banco Santander",
+        "Nombre_Ejecutivo_Suscriptor": "María Fernanda Soto Pérez",
+        "Deudor_Principal": "Comercial Los Álamos Limitada",
+        "RUT_Deudor_Principal": "76.111.222-3",
+        "Monto_Original": "20000000", "Saldo_Insoluto": "15000000",
+        "Moneda": "CLP", "Tasa_Interes": "1,2% mensual",
+        "Interes_Penal": "máximo convencional",
+        "Clausula_Aceleracion": True, "Liberacion_Protesto": True,
+        "Firmas_Autorizadas_Notarialmente": True,
+        "Domicilio_Competencia": "Santiago",
+        "Fuente_Documento": "pagare_296134.pdf", "Fuente_Pagina": "1",
+        "Fuente_Texto": "«…prometo pagar a la orden de Banco Santander…»",
+        "Observaciones": "Instrumento de demostración.",
+    })
+    mod_casos.agregar_parte(id_caso, {
+        "Nombre": "Comercial Los Álamos Limitada", "RUT": "76.111.222-3",
+        "Tipo_Parte": "DEMANDADO", "Calidad_Juridica": "Deudor principal",
+        "Responde_Por_Instrumento": "TODOS",
+        "Monto_Responsabilidad": "15000000", "Moneda_Responsabilidad": "CLP",
+        "Domicilio": "Av. Providencia 1234, oficina 501, Providencia, Santiago",
+        "Fuente_Documento": "pagare_296134.pdf",
+    })
+    mod_casos.agregar_parte(id_caso, {
+        "Nombre": "Rosa Andrea Sottorff Muñoz", "RUT": "9.999.999-9",
+        "Tipo_Parte": "DEMANDADO", "Calidad_Juridica": "Avalista",
+        "Responde_Por_Instrumento": inst1["ID_Instrumento"],
+        "Monto_Responsabilidad": "15000000", "Moneda_Responsabilidad": "CLP",
+        "Domicilio": "Los Aromos 45, Ñuñoa, Santiago",
+        "Fuente_Documento": "pagare_296134.pdf",
+    })
 
 
 # ---------------------------------------------------------------------------

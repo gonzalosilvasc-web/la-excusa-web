@@ -139,6 +139,10 @@ def actualizar_caso(id_caso: str, cambios: dict[str, Any]) -> bool:
         return False
     for k, v in cambios.items():
         if k in df.columns:
+            # Las columnas vacías llegan desde Excel como float64 (NaN);
+            # se fuerzan a object para poder asignar texto sin error.
+            if df[k].dtype != object:
+                df[k] = df[k].astype(object)
             df.loc[mask, k] = v
     write_excel_safe(df, CASES_XLSX)
     return True

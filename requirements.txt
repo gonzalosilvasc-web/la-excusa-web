@@ -2,7 +2,7 @@
 # Nota: en Python muy reciente (3.13/3.14) use siempre las últimas versiones
 # que instala este archivo; si pip fallara con una versión nueva de Python,
 # instale Python 3.11 o 3.12 (recomendado).
-streamlit>=1.35.0
+streamlit>=1.50.0
 pandas>=2.2.0
 openpyxl>=3.1.0
 rapidfuzz>=3.5.0
