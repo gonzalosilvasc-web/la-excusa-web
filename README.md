@@ -65,6 +65,25 @@ Dentro de la carpeta extraída, haga **doble clic en `INICIAR_APP.bat`**.
 
 ## 🆘 Solución de problemas
 
+**"Hice doble clic y no se abre nada" — revise en este orden:**
+
+1. **¿Apareció una ventana azul de Windows?** Presione "Más información" →
+   "Ejecutar de todas formas". Si la cerró sin querer, vuelva a hacer doble
+   clic en `INICIAR_APP.bat`.
+2. **¿La ventana negra se abre y se cierra al instante?** Use
+   **`INICIAR_APP_SEGURO.bat`** (está en la misma carpeta): hace lo mismo
+   pero la ventana queda abierta SIEMPRE, mostrando el error.
+3. **¿La ventana negra quedó abierta "pensando"?** La primera instalación
+   tarda varios minutos — espere sin cerrarla. Si le preguntó un "Email",
+   presione Enter sin escribir nada (las versiones nuevas del lanzador ya
+   evitan esa pregunta).
+4. **¿Su antivirus mostró algo?** Algunos antivirus bloquean archivos .bat
+   descargados. Márquelo como confiable y reintente.
+5. **¿Nada de lo anterior?** Doble clic en **`DIAGNOSTICO.bat`**, saque foto
+   o copie la pantalla, y revise también el archivo
+   **`registro_instalacion.txt`** que se crea en la carpeta — ahí queda
+   anotado exactamente en qué paso se detuvo.
+
 **Windows muestra "Windows protegió su PC" / advertencia azul (SmartScreen):**
 presione **"Más información"** y luego **"Ejecutar de todas formas"**. Es su
 propio archivo descargado; Windows lo advierte solo porque no está firmado.

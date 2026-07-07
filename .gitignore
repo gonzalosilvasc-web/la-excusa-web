@@ -24,3 +24,6 @@ venv/
 # --- Sistema operativo / editores ---
 .DS_Store
 Thumbs.db
+
+# Registro local de instalacion del lanzador
+registro_instalacion.txt

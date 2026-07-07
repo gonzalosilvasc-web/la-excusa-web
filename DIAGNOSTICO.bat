@@ -1,6 +1,5 @@
 @echo off
 setlocal EnableExtensions
-chcp 65001 >nul
 title Diagnostico - Sistema de Personerias y Demandas
 
 rem ==================================================================

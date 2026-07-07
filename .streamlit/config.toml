@@ -1,0 +1,6 @@
+# Configuracion local de Streamlit para esta aplicacion.
+[browser]
+gatherUsageStats = false
+
+[server]
+port = 8501

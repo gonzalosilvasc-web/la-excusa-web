@@ -83,7 +83,14 @@ if [ ! -x ".venv/bin/python" ]; then
            "Revise su conexión a internet, borre .venv y reintente. Diagnóstico: python3 check_install.py"
 fi
 
-# --- Paso 4: ejecutar la aplicación ---
+# --- Paso 4: evitar que Streamlit pida un email y bloquee el arranque ---
+if [ ! -f "$HOME/.streamlit/credentials.toml" ]; then
+    mkdir -p "$HOME/.streamlit"
+    printf '[general]\nemail = ""\n' > "$HOME/.streamlit/credentials.toml"
+fi
+export STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+
+# --- Paso 5: ejecutar la aplicación ---
 echo
 echo "Iniciando la aplicación... se abrirá en su navegador."
 echo "Si no se abre sola, entre a: http://localhost:8501"
