@@ -34,6 +34,19 @@ de su máquina, a menos que usted autorice expresamente la extracción con IA.
 3. ⚠️ **No haga doble clic en los archivos DENTRO del ZIP sin extraer** — no
    funcionará (y la app se lo dirá).
 
+### ⚠️ Reglas de oro en Windows (léalas antes de abrir)
+
+1. **Primero extraiga el ZIP.** Clic derecho sobre el ZIP → "Extraer todo…".
+2. **NO ejecute la app desde dentro del ZIP** — no funcionará (y la app se lo
+   advertirá con un mensaje).
+3. Abra la carpeta extraída y haga **doble clic en `INICIAR_APP.bat`**.
+4. **La primera instalación puede demorar varios minutos.** No cierre la
+   ventana negra mientras instala.
+5. Si Windows muestra una advertencia azul ("Windows protegió su PC"),
+   presione **"Más información"** y luego **"Ejecutar de todas formas"**.
+6. Si algo falla, haga **doble clic en `DIAGNOSTICO.bat`** y **copie el
+   resultado de la pantalla** para pedir soporte.
+
 ### Paso 3 — Abra la aplicación
 
 Dentro de la carpeta extraída, haga **doble clic en `INICIAR_APP.bat`**.

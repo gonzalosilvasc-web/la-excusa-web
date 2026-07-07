@@ -26,20 +26,23 @@ echo.
 
 echo --- 2. Python ---
 set "PYTHON_CMD="
-where python >nul 2>nul && set "PYTHON_CMD=python"
+py -3 --version >nul 2>nul
+if not errorlevel 1 set "PYTHON_CMD=py -3"
 if not defined PYTHON_CMD (
-    where py >nul 2>nul && set "PYTHON_CMD=py -3"
+    python --version >nul 2>nul
+    if not errorlevel 1 set "PYTHON_CMD=python"
 )
 if not defined PYTHON_CMD (
     echo [FALLA] Python no esta instalado o no esta en el PATH.
     echo         Instale desde https://www.python.org/downloads/ marcando "Add Python to PATH".
     goto :fin
 )
-for /f "delims=" %%v in ('%PYTHON_CMD% --version 2^>^&1') do echo [OK]    %%v  (comando: %PYTHON_CMD%)
+for /f "delims=" %%v in ('%PYTHON_CMD% --version 2^>^&1') do echo [OK]    %%v  - comando: %PYTHON_CMD%
 echo.
 
 echo --- 3. pip ---
-%PYTHON_CMD% -m pip --version 2>nul && (echo [OK]    pip disponible) || (echo [FALLA] pip no disponible - reinstale Python)
+%PYTHON_CMD% -m pip --version 2>nul
+if errorlevel 1 (echo [FALLA] pip no disponible - reinstale Python) else (echo [OK]    pip disponible)
 echo.
 
 echo --- 4. Entorno virtual ---
@@ -64,7 +67,7 @@ if exist "_test_escritura.tmp" (
 echo.
 
 echo --- 6. Dependencias, carpetas y verificacion completa ---
-echo (ejecutando check_install.py ...)
+echo ... ejecutando check_install.py ...
 echo.
 %APP_PY% check_install.py
 echo.
