@@ -4,3 +4,12 @@ gatherUsageStats = false
 
 [server]
 port = 8501
+
+# Identidad visual sobria para uso jurídico-bancario
+[theme]
+base = "light"
+primaryColor = "#B01116"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F5F7"
+textColor = "#1C1E21"
+font = "sans serif"
