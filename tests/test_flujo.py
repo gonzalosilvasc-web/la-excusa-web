@@ -454,6 +454,39 @@ c = clasificador.clasificar_caso(pd.DataFrame(columns=df_i.columns), df_p)
 check("Bloquea caso sin títulos ejecutivos", c["bloqueo"] is True)
 
 # ---------------------------------------------------------------------------
+print("\n== 12. Seguridad jurídica: nombre ambiguo entre dos personas ==")
+mandatos.guardar_mandato({
+    "Nombre_Ejecutivo": "María González Díaz",
+    "Entidad_Representada": "Banco Santander",
+    "Fecha_Otorgamiento": "01/06/2019", "Fecha_Revocacion": None,
+    "Notario_Titular": "Notario Prueba", "Ciudad_Notaria": "Santiago",
+    "Repertorio": "777-2019", "Facultad_Pagare": True, "Usuario_Carga": "tester",
+})
+df_amb = mandatos.cargar_mandatos()
+r_amb = mandatos.buscar_personeria(df_amb, "maria", "Banco Santander", date(2020, 5, 1))
+check("Nombre ambiguo (dos Marías): NO elige ninguna y reporta ambigüedad",
+      r_amb["vigente"] is None and len(r_amb["ambiguos"]) >= 2)
+r_ok = mandatos.buscar_personeria(
+    df_amb, "María Fernanda Soto Pérez", "Banco Santander", date(2020, 5, 1))
+check("Nombre completo resuelve la ambigüedad",
+      r_ok["vigente"] is not None and r_ok["ambiguos"].empty
+      and r_ok["vigente"]["Repertorio"] == "12345-2019")
+
+# ---------------------------------------------------------------------------
+print("\n== 13. Preservación de columnas manuales y depuración de respaldos ==")
+from legal.storage import MAX_BACKUPS, read_excel_or_empty
+
+df_extra = read_excel_or_empty(MANDATOS_XLSX)
+df_extra["Columna_Manual_Usuario"] = "nota del abogado"
+write_excel_safe(df_extra, MANDATOS_XLSX)
+df_reread = read_excel_or_empty(MANDATOS_XLSX)
+check("Columnas agregadas a mano en Excel se preservan tras reescritura",
+      "Columna_Manual_Usuario" in df_reread.columns
+      and df_reread["Columna_Manual_Usuario"].iloc[0] == "nota del abogado")
+n_backups = len(list(BACKUPS_DIR.glob("*_backup_*")))
+check("Respaldos depurados bajo el límite", n_backups <= MAX_BACKUPS)
+
+# ---------------------------------------------------------------------------
 print("\n" + "=" * 60)
 fallas = [r for r in RESULTADOS if not r[1]]
 print(f" RESULTADO FINAL: {len(RESULTADOS) - len(fallas)}/{len(RESULTADOS)} pruebas PASAN")

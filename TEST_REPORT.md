@@ -124,3 +124,40 @@ auditoría actualizados → cambio de caso limpia el estado del generador.
 
 Se agregó `GUIA_DEMO.md` con el guion de presentación, checklist previo y
 plan B ante imprevistos.
+
+
+## Adenda 07/07/2026 (2) — Revisión de código exhaustiva (nivel "impecable")
+
+Revisión manual módulo por módulo con 6 ángulos (correctitud línea a línea,
+invariantes prometidas, trazado entre archivos, reuso, eficiencia, altitud
+arquitectónica). Hallazgos confirmados y corregidos:
+
+1. **[CRÍTICO — seguridad jurídica] Ambigüedad silenciosa en búsqueda de
+   personerías** (`legal/mandatos.py`): `token_set_ratio("maria", X) = 100`
+   para CUALQUIER nombre que contenga "maria"; con dos ejecutivas distintas
+   que compartieran un nombre, el sistema elegía en silencio la personería
+   más reciente de cualquiera de ellas — riesgo de citar la personería de la
+   persona equivocada en una demanda. **Corregido:** si el nombre buscado
+   coincide con más de una persona distinta, no se selecciona ninguna y ambas
+   pantallas (Personerías y Generador) exigen el nombre completo, listando
+   las coincidencias. Verificado por prueba unitaria y prueba de UI real.
+2. **[Datos] Pérdida de columnas manuales** (`legal/storage.py`): si un
+   abogado agregaba una columna propia en un Excel (p. ej. "Notas"), la
+   siguiente escritura de la app la descartaba. **Corregido:** las columnas
+   extra se preservan reordenadas al final. Verificado por prueba.
+3. **[Recursos] Crecimiento sin límite de respaldos** (`legal/storage.py`):
+   cada escritura creaba una copia completa en `backups/` sin depuración
+   (cientos de archivos tras semanas de uso). **Corregido:** rotación
+   automática que conserva los 300 respaldos más recientes. Verificado.
+
+Re-verificación posterior completa: suite ampliada **56/56 PASAN** (incluye
+las 4 pruebas nuevas), `check_install.py` OK, y flujo end-to-end de UI real
+íntegro (personería → componer → revisar → checklist → generar → Word), más
+las dos pantallas con la nueva protección de ambigüedad.
+
+Hallazgos evaluados y descartados con razón: coincidencia de nombres por
+subcadena en el revisor (falla solo hacia el lado seguro: bloquea de más,
+nunca de menos); dobles lecturas de Excel por rerun de Streamlit (volumen
+local pequeño, cachear introduciría riesgo de datos obsoletos antes de la
+presentación); doble render del docx (necesario por diseño: se revisa el
+texto realmente renderizado).

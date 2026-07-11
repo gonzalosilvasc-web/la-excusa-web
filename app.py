@@ -160,6 +160,19 @@ def tab_consulta() -> None:
 
     resultado = mod_mand.buscar_personeria(df, nombre, entidad, fecha_instrumento)
 
+    if not resultado["ambiguos"].empty:
+        st.error(
+            "⚠️ El nombre ingresado coincide con MÁS DE UN ejecutivo distinto. "
+            "Por seguridad jurídica no se selecciona ninguno: escriba el "
+            "nombre completo del ejecutivo correcto."
+        )
+        st.dataframe(
+            resultado["ambiguos"][["Nombre_Ejecutivo", "Entidad_Representada",
+                                   "Fecha_Otorgamiento", "Repertorio"]],
+            width="stretch", hide_index=True,
+        )
+        return
+
     if not resultado["mismo_dia"].empty:
         st.warning(MSG_REVOCACION_MISMO_DIA)
         st.dataframe(resultado["mismo_dia"], width="stretch", hide_index=True)
@@ -959,16 +972,24 @@ def tab_generador() -> None:
             return
         res = mod_mand.buscar_personeria(dfm, g_nombre,
                                          str(caso["Banco_Entidad"]), fecha_ref)
-        if not res["mismo_dia"].empty:
-            st.warning(MSG_REVOCACION_MISMO_DIA)
-        if res["vigente"] is None:
-            st.error("No se encontró personería vigente para ese ejecutivo/entidad/fecha.")
+        if not res["ambiguos"].empty:
+            st.error(
+                "⚠️ El nombre coincide con más de un ejecutivo distinto: "
+                + "; ".join(res["ambiguos"]["Nombre_Ejecutivo"].astype(str).unique())
+                + ". Escriba el nombre completo del ejecutivo correcto."
+            )
             st.session_state.pop("g_mandato", None)
         else:
-            st.session_state["g_mandato"] = res["vigente"].to_dict()
-            # Autocompletar el representante que comparece si está vacío
-            if not str(st.session_state.get("g_rep", "")).strip():
-                st.session_state["g_rep"] = str(res["vigente"]["Nombre_Ejecutivo"])
+            if not res["mismo_dia"].empty:
+                st.warning(MSG_REVOCACION_MISMO_DIA)
+            if res["vigente"] is None:
+                st.error("No se encontró personería vigente para ese ejecutivo/entidad/fecha.")
+                st.session_state.pop("g_mandato", None)
+            else:
+                st.session_state["g_mandato"] = res["vigente"].to_dict()
+                # Autocompletar el representante que comparece si está vacío
+                if not str(st.session_state.get("g_rep", "")).strip():
+                    st.session_state["g_rep"] = str(res["vigente"]["Nombre_Ejecutivo"])
     mandato = st.session_state.get("g_mandato")
     if mandato:
         st.success(

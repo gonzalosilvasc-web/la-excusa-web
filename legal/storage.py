@@ -82,7 +82,12 @@ def read_excel_or_empty(ruta: Path) -> pd.DataFrame:
     for col in columnas:
         if col not in df.columns:
             df[col] = pd.NA
-    return df[columnas] if columnas else df
+    if not columnas:
+        return df
+    # Conservar columnas extra agregadas manualmente por el usuario en Excel
+    # (reordenadas al final) en vez de descartarlas en la próxima escritura.
+    extras = [c for c in df.columns if c not in columnas]
+    return df[columnas + extras]
 
 
 def append_row(ruta: Path, fila: dict) -> None:
@@ -90,6 +95,11 @@ def append_row(ruta: Path, fila: dict) -> None:
     df = read_excel_or_empty(ruta)
     df = pd.concat([df, pd.DataFrame([fila])], ignore_index=True)
     write_excel_safe(df, ruta)
+
+
+# Respaldos máximos conservados; los más antiguos se depuran automáticamente
+# para que database/backups/ no crezca sin límite (un respaldo por escritura).
+MAX_BACKUPS = 300
 
 
 def crear_backup(archivo: Path) -> Optional[Path]:
@@ -101,9 +111,22 @@ def crear_backup(archivo: Path) -> Optional[Path]:
     try:
         BACKUPS_DIR.mkdir(parents=True, exist_ok=True)
         shutil.copy2(archivo, destino)
+        _depurar_backups()
         return destino
     except OSError:
         return None
+
+
+def _depurar_backups() -> None:
+    """Elimina los respaldos más antiguos por sobre MAX_BACKUPS."""
+    try:
+        respaldos = sorted(
+            BACKUPS_DIR.glob("*_backup_*"), key=lambda p: p.name, reverse=True
+        )
+        for antiguo in respaldos[MAX_BACKUPS:]:
+            antiguo.unlink()
+    except OSError:
+        pass
 
 
 def registrar_auditoria(

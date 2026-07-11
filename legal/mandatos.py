@@ -45,9 +45,14 @@ def buscar_personeria(
 ) -> dict[str, Any]:
     """Busca la personería vigente a la fecha del instrumento.
 
-    Retorna {"vigente": Series|None, "mismo_dia": DataFrame}.
+    Retorna {"vigente": Series|None, "mismo_dia": DataFrame, "ambiguos": DataFrame}.
+    Si el nombre buscado coincide con MÁS DE UNA persona distinta, no se elige
+    ninguna: se retorna "ambiguos" para exigir un nombre más específico (regla
+    de seguridad jurídica — nunca citar la personería de la persona equivocada).
     """
-    resultado: dict[str, Any] = {"vigente": None, "mismo_dia": pd.DataFrame()}
+    resultado: dict[str, Any] = {
+        "vigente": None, "mismo_dia": pd.DataFrame(), "ambiguos": pd.DataFrame(),
+    }
     nombre_norm = normalizar_nombre(nombre_input)
     if df.empty or not nombre_norm:
         return resultado
@@ -74,6 +79,12 @@ def buscar_personeria(
         | (candidatos["Fecha_Revocacion"] > fecha_ts)
     ]
     if not vigentes.empty:
+        personas = (
+            vigentes["Nombre_Ejecutivo_Normalizado"].astype(str).str.strip().unique()
+        )
+        if len(personas) > 1:
+            resultado["ambiguos"] = vigentes
+            return resultado
         resultado["vigente"] = (
             vigentes.sort_values("Fecha_Otorgamiento", ascending=False).iloc[0]
         )
