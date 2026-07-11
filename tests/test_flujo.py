@@ -487,6 +487,60 @@ n_backups = len(list(BACKUPS_DIR.glob("*_backup_*")))
 check("Respaldos depurados bajo el límite", n_backups <= MAX_BACKUPS)
 
 # ---------------------------------------------------------------------------
+print("\n== 14. Prescripción: nunca afirmada automáticamente ==")
+check("El generador NO afirma 'no prescrita' por sí solo",
+      "no prescrit" not in ctx2["RELATO_DE_LOS_HECHOS"].lower()
+      and "no prescrit" not in texto_render(ctx2).lower())
+
+ctx_presc = dict(ctx2)
+ctx_presc["RELATO_DE_LOS_HECHOS"] += (
+    "\nLa obligación se encuentra vigente y no prescrita."
+)
+rev_p = revisor.revisar_demanda(ctx_presc, df_i2, df_p2, mandato_dict,
+                                texto_render(ctx_presc))
+check("Bloquea 'no prescrita' escrita a mano SIN validación expresa",
+      any(h.regla == "prescripcion" and h.nivel == revisor.CRITICO
+          for h in rev_p.hallazgos))
+
+ctx_presc_ok = dict(ctx_presc)
+ctx_presc_ok["PRESCRIPCION_VALIDADA"] = "SI"
+rev_p2 = revisor.revisar_demanda(ctx_presc_ok, df_i2, df_p2, mandato_dict,
+                                 texto_render(ctx_presc_ok))
+check("Con validación expresa del abogado la afirmación se permite",
+      not any(h.regla == "prescripcion" for h in rev_p2.criticos))
+
+# ---------------------------------------------------------------------------
+print("\n== 15. Bootstrap: ubicación del entorno virtual ==")
+import bootstrap as boot
+
+venv_actual = boot.ruta_venv()
+check("ruta_venv retorna una ruta válida",
+      venv_actual.name in (".venv",) or "venvs" in str(venv_actual))
+check("En POSIX (o ruta corta) el venv es local al proyecto",
+      os.name == "nt" or venv_actual == boot.PROYECTO / ".venv")
+
+# Simulación del caso Windows con ruta larga: el venv debe ir a una ruta
+# corta externa bajo LOCALAPPDATA\LegalTechDemandas\venvs\<hash>.
+_orig_riesgo = boot.ruta_larga_riesgosa
+_orig_local = os.environ.get("LOCALAPPDATA")
+try:
+    boot.ruta_larga_riesgosa = lambda: True
+    os.environ["LOCALAPPDATA"] = str(TEMP_DIR / "LocalAppData")
+    venv_ext = boot.ruta_venv()
+    check("Ruta larga: venv externo corto bajo LOCALAPPDATA con hash",
+          "LegalTechDemandas" in str(venv_ext) and "venvs" in str(venv_ext)
+          and len(venv_ext.name) == 12)
+    venv_ext2 = boot.ruta_venv()
+    check("El hash del venv externo es determinista por proyecto",
+          venv_ext == venv_ext2)
+finally:
+    boot.ruta_larga_riesgosa = _orig_riesgo
+    if _orig_local is None:
+        os.environ.pop("LOCALAPPDATA", None)
+    else:
+        os.environ["LOCALAPPDATA"] = _orig_local
+
+# ---------------------------------------------------------------------------
 print("\n" + "=" * 60)
 fallas = [r for r in RESULTADOS if not r[1]]
 print(f" RESULTADO FINAL: {len(RESULTADOS) - len(fallas)}/{len(RESULTADOS)} pruebas PASAN")

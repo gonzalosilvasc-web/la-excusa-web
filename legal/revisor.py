@@ -314,6 +314,27 @@ def revisar_demanda(
             ))
             break  # un hallazgo por patrón basta para bloquear; evita ruido
 
+    # --- Regla 13-bis: afirmación de prescripción sin validación expresa ---
+    # "No prescrita" es una calificación jurídica que debe evaluar el abogado
+    # caso a caso; el sistema jamás la genera solo y, si aparece escrita a
+    # mano, exige la validación manual expresa del generador.
+    afirmacion_prescripcion = re.search(
+        r"no\s+(?:se\s+encuentra\s+|esta\s+|está\s+|ha\s+)?prescrit[ao]",
+        texto_total, flags=re.IGNORECASE,
+    )
+    prescripcion_validada = str(
+        contexto.get("PRESCRIPCION_VALIDADA", "")
+    ).strip().upper() == "SI"
+    if afirmacion_prescripcion and not prescripcion_validada:
+        r.hallazgos.append(Hallazgo(
+            CRITICO, "prescripcion", "Cuerpo de la demanda",
+            "La demanda afirma que la obligación no está prescrita, pero esa "
+            "calificación jurídica no fue validada expresamente por el abogado.",
+            "Evalúe personalmente la prescripción y marque la casilla de "
+            "validación de prescripción en el generador, o elimine la "
+            "afirmación del texto.",
+        ))
+
     # --- Regla 14: campos críticos vacíos ---
     for campo in CAMPOS_CRITICOS:
         valor = str(contexto.get(campo, "")).strip()

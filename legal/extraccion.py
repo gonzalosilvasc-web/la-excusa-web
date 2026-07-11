@@ -116,6 +116,30 @@ Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional ni bloques 
 {esquema}"""
 
 
+def info_proveedor() -> tuple[str, str]:
+    """(proveedor, modelo) configurados — para auditoría de envíos a IA."""
+    _, provider = ocr_disponible()
+    if provider == "openai":
+        return provider, os.environ.get("OCR_MODEL", "gpt-4o")
+    if provider == "google":
+        return provider, os.environ.get("OCR_MODEL", "gemini-1.5-pro")
+    return "", ""
+
+
+def hash_archivo(ruta: str | Path) -> str:
+    """SHA-256 del archivo (para auditoría de qué documento exacto se envió)."""
+    import hashlib
+
+    h = hashlib.sha256()
+    try:
+        with open(ruta, "rb") as f:
+            for bloque in iter(lambda: f.read(1 << 20), b""):
+                h.update(bloque)
+        return h.hexdigest()
+    except OSError:
+        return "no-calculable"
+
+
 def ocr_disponible() -> tuple[bool, str]:
     """(disponible, proveedor) según variables de entorno."""
     provider = os.environ.get("OCR_PROVIDER", "").strip().lower()

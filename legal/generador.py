@@ -82,11 +82,13 @@ def _texto_relato(instrumentos: pd.DataFrame) -> str:
         fecha_mora = formatear_fecha(inst.get("Fecha_Mora")) or NO_DETECTADO
         moneda = str(inst.get("Moneda") or "CLP")
         saldo = formatear_monto(inst.get("Saldo_Insoluto"), moneda)
+        # Nota jurídica: NO se afirma automáticamente que la obligación "no
+        # está prescrita" — la prescripción debe evaluarla el abogado. Si se
+        # incluye esa afirmación a mano, el revisor exige validación expresa.
         lineas.append(
             f"El deudor cesó en el pago de las obligaciones emanadas del título "
             f"N° {numero} a contar del {fecha_mora}, adeudando a esta parte la "
-            f"suma de {saldo}, la que se encuentra actualmente exigible, siendo "
-            f"la obligación líquida y no prescrita."
+            f"suma de {saldo}, obligación líquida y actualmente exigible."
         )
     return "\n".join(lineas)
 
@@ -257,6 +259,11 @@ def componer_contexto(
         "FECHA_DEMANDA": str(
             campos_manuales.get("FECHA_DEMANDA") or datetime.now().strftime("%d/%m/%Y")
         ),
+        # Validación expresa del abogado para afirmar la no-prescripción
+        # (el revisor bloquea esa afirmación si este campo no es "SI").
+        "PRESCRIPCION_VALIDADA": str(
+            campos_manuales.get("PRESCRIPCION_VALIDADA", "")
+        ).strip().upper(),
     }
     # Los bloques editados manualmente por el usuario prevalecen
     for clave, valor in campos_manuales.items():

@@ -18,8 +18,9 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent
 
 ARCHIVOS_REQUERIDOS = [
-    "app.py", "requirements.txt", "INICIAR_APP.bat", "iniciar_app.sh",
-    "DIAGNOSTICO.bat", ".env.example", ".gitignore", "README.md",
+    "app.py", "requirements.txt", "bootstrap.py", "INICIAR_APP.bat",
+    "INICIAR_APP_SEGURO.bat", "iniciar_app.sh", "DIAGNOSTICO.bat",
+    ".env.example", ".gitignore", "README.md",
 ]
 CARPETAS_APP = ["legal"]
 DEPENDENCIAS = ["streamlit", "pandas", "openpyxl", "rapidfuzz", "docxtpl", "docx"]
@@ -57,6 +58,29 @@ def _check_archivos() -> int:
             print(f"{FAIL} Falta la carpeta {carpeta}/")
             errores += 1
     return errores
+
+
+def _check_ruta() -> int:
+    """Riesgo de la ruta del proyecto: largo (MAX_PATH) y caracteres especiales."""
+    ruta = str(BASE)
+    if any(c in ruta for c in "()"):
+        print(f"{OK} La ruta contiene paréntesis (p. ej. '(1)') — soportado "
+              "por los lanzadores actuales.")
+    try:
+        import bootstrap
+
+        venv = bootstrap.ruta_venv()
+        if bootstrap.ruta_larga_riesgosa():
+            print(f"{WARN} Ruta del proyecto larga ({len(ruta)} caracteres): "
+                  "riesgo MAX_PATH en Windows. Mitigado: el entorno virtual "
+                  f"se crea en ruta corta externa → {venv}")
+        else:
+            print(f"{OK} Largo de ruta seguro ({len(ruta)} caracteres). "
+                  f"Entorno virtual: {venv}")
+        return 0
+    except Exception as exc:  # noqa: BLE001
+        print(f"{FAIL} No se pudo evaluar la ruta del venv (bootstrap.py): {exc}")
+        return 1
 
 
 def _check_escritura() -> int:
@@ -185,6 +209,7 @@ def revisar() -> int:
     errores = 0
     errores += _check_python()
     errores += _check_archivos()
+    errores += _check_ruta()
     errores += _check_escritura()
     errores += _check_dependencias()
     errores += _check_estructura()

@@ -2,44 +2,19 @@
 # ==================================================================
 #  Lanzador para macOS / Linux — Sistema de Personerías y Demandas
 #  Ejecutivas. Uso: ./iniciar_app.sh
-#  Soporta rutas con espacios, tildes y caracteres especiales.
-#  Ante cualquier error muestra un diagnóstico completo.
+#  Soporta rutas con espacios, tildes y paréntesis como "(1)".
+#  La instalación (venv + pip + arranque) la realiza bootstrap.py.
 # ==================================================================
 set -u
 cd "$(dirname "$0")" || { echo "[ERROR] No se pudo entrar a la carpeta del proyecto."; exit 1; }
 PROYECTO="$(pwd)"
-PYVER="(Python no detectado aún)"
-
-error_final() {
-    # $1 = paso, $2 = causa, $3 = solución
-    echo
-    echo "=================================================================="
-    echo " [ERROR] La instalación o ejecución NO pudo completarse."
-    echo "=================================================================="
-    echo " Paso que falló   : $1"
-    echo " Qué falló        : $2"
-    echo " Qué debe hacer   : $3"
-    echo
-    echo " --- Información técnica para soporte ---"
-    echo " Carpeta del proyecto : $PROYECTO"
-    echo " Versión de Python    : $PYVER"
-    [ -f "app.py" ] && echo " app.py               : $PROYECTO/app.py" \
-                    || echo " app.py               : NO ENCONTRADO"
-    [ -f "requirements.txt" ] && echo " requirements.txt     : $PROYECTO/requirements.txt" \
-                              || echo " requirements.txt     : NO ENCONTRADO"
-    [ -x ".venv/bin/python" ] && echo " Entorno virtual      : $PROYECTO/.venv [existe]" \
-                              || echo " Entorno virtual      : no creado"
-    echo
-    echo " Diagnóstico completo: python3 check_install.py"
-    exit 1
-}
 
 echo "=================================================================="
 echo " Sistema de Personerías y Demandas Ejecutivas"
-echo " Carpeta del proyecto: $PROYECTO"
+echo " Carpeta del proyecto: \"$PROYECTO\""
 echo "=================================================================="
 
-# --- Paso 1: ZIP no extraído / archivos faltantes ---
+# --- Paso 1: archivos del proyecto ---
 if [ ! -f "app.py" ] && [ ! -f "requirements.txt" ]; then
     echo
     echo "[ERROR] Debe extraer el ZIP antes de ejecutar la aplicación."
@@ -47,58 +22,34 @@ if [ ! -f "app.py" ] && [ ! -f "requirements.txt" ]; then
     echo "Extraiga el ZIP completo y vuelva a ejecutar iniciar_app.sh"
     exit 1
 fi
-[ -f "app.py" ] || error_final "1 - Verificación de archivos" \
-    "Falta el archivo app.py en la carpeta del proyecto." \
-    "Vuelva a extraer el ZIP COMPLETO (no copie archivos sueltos) y reintente."
-[ -f "requirements.txt" ] || error_final "1 - Verificación de archivos" \
-    "Falta el archivo requirements.txt en la carpeta del proyecto." \
-    "Vuelva a extraer el ZIP COMPLETO (no copie archivos sueltos) y reintente."
+for f in app.py requirements.txt bootstrap.py; do
+    if [ ! -f "$f" ]; then
+        echo
+        echo "[ERROR] Falta el archivo $f en la carpeta del proyecto."
+        echo "Vuelva a extraer el ZIP COMPLETO (no copie archivos sueltos)."
+        exit 1
+    fi
+done
 
 # --- Paso 2: Python ---
 PYTHON_CMD=""
 if command -v python3 >/dev/null 2>&1; then PYTHON_CMD="python3";
 elif command -v python >/dev/null 2>&1; then PYTHON_CMD="python"; fi
-[ -n "$PYTHON_CMD" ] || error_final "2 - Detección de Python" \
-    "Python 3 no está instalado." \
-    "Instálelo desde https://www.python.org/downloads/ (recomendado 3.11 o 3.12)."
-PYVER="$("$PYTHON_CMD" --version 2>&1)"
-echo "Python detectado: $PYVER"
-"$PYTHON_CMD" -c 'import sys; sys.exit(0 if sys.version_info >= (3,10) else 1)' \
-    || error_final "2 - Versión de Python" \
-       "La versión instalada ($PYVER) es demasiado antigua; se requiere 3.10+." \
-       "Instale Python 3.11 o 3.12 desde https://www.python.org/downloads/"
-
-# --- Paso 3: entorno virtual y dependencias ---
-if [ ! -x ".venv/bin/python" ]; then
+if [ -z "$PYTHON_CMD" ]; then
     echo
-    echo "Primera ejecución: creando entorno e instalando dependencias."
-    echo "Esto puede tardar varios minutos. No cierre esta ventana."
-    "$PYTHON_CMD" -m venv .venv || error_final "3 - Creación del entorno virtual" \
-        "Python no pudo crear la carpeta .venv." \
-        "Borre la carpeta .venv si existe, verifique permisos de escritura y reintente."
-    ".venv/bin/python" -m pip install --upgrade pip
-    ".venv/bin/python" -m pip install -r requirements.txt \
-        || error_final "3 - Instalación de dependencias" \
-           "Falló la descarga o instalación de una o más dependencias." \
-           "Revise su conexión a internet, borre .venv y reintente. Diagnóstico: python3 check_install.py"
+    echo "[ERROR] Python 3 no está instalado."
+    echo "Instálelo desde https://www.python.org/downloads/ (recomendado 3.11 o 3.12)."
+    exit 1
 fi
+echo "Python detectado: $("$PYTHON_CMD" --version 2>&1)"
 
-# --- Paso 4: evitar que Streamlit pida un email y bloquee el arranque ---
-if [ ! -f "$HOME/.streamlit/credentials.toml" ]; then
-    mkdir -p "$HOME/.streamlit"
-    printf '[general]\nemail = ""\n' > "$HOME/.streamlit/credentials.toml"
-fi
-export STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-
-# --- Paso 5: ejecutar la aplicación ---
-echo
-echo "Iniciando la aplicación... se abrirá en su navegador."
-echo "Si no se abre sola, entre a: http://localhost:8501"
-echo "Para detenerla presione Ctrl+C."
-echo
-".venv/bin/python" -m streamlit run app.py
+# --- Paso 3: instalar y ejecutar (bootstrap valida versión mínima) ---
+"$PYTHON_CMD" bootstrap.py
 estado=$?
-[ $estado -eq 0 ] || error_final "4 - Ejecución de la aplicación" \
-    "La aplicación terminó con un error (código $estado). Revise los mensajes de arriba." \
-    "Ejecute el diagnóstico (.venv/bin/python check_install.py). Si un Excel de database/ está abierto, ciérrelo y reintente."
-exit 0
+if [ $estado -ne 0 ]; then
+    echo
+    echo "[ERROR] La instalación o ejecución terminó con código $estado."
+    echo "Revise los mensajes de arriba y registro_instalacion.txt."
+    echo "Diagnóstico completo: $PYTHON_CMD bootstrap.py --diagnostico"
+fi
+exit $estado

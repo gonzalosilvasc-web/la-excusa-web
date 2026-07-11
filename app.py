@@ -115,6 +115,21 @@ def _guardar_temporal(nombre: str, contenido: bytes) -> Path:
     return destino
 
 
+def _auditar_envio_ia(ruta: str, usuario: str, id_caso: str = "") -> None:
+    """Registra en auditoría cada documento enviado a un proveedor externo de
+    IA: proveedor, modelo, archivo, hash SHA-256, usuario, fecha y que la
+    autorización de confidencialidad fue confirmada."""
+    proveedor, modelo = mod_extr.info_proveedor()
+    registrar_auditoria(
+        "ENVIO_DOCUMENTO_IA", usuario, id_caso=id_caso, resultado="AUTORIZADO",
+        observaciones=(
+            f"proveedor={proveedor}; modelo={modelo}; "
+            f"archivo={Path(ruta).name}; sha256={mod_extr.hash_archivo(ruta)}; "
+            "autorizacion_confidencialidad=confirmada_por_usuario"
+        ),
+    )
+
+
 def _gate_confidencialidad(clave: str) -> bool:
     """Advertencia de confidencialidad previa al uso de IA externa."""
     st.warning(MSG_CONFIDENCIALIDAD)
@@ -251,6 +266,7 @@ def tab_carga_mandatos() -> None:
     if archivo is not None and disponible:
         autorizado = _gate_confidencialidad("m_gate")
         if st.button("🤖 Extraer datos con IA", key="m_ocr", disabled=not autorizado):
+            _auditar_envio_ia(st.session_state["m_pdf_tmp"], usuario)
             with st.spinner("Analizando la escritura…"):
                 datos = mod_extr.extract_mandato_data(st.session_state["m_pdf_tmp"])
             if "_error" in datos:
@@ -662,6 +678,7 @@ def tab_extraccion() -> None:
             if st.button("Extraer datos del documento", key="e_extraer",
                          disabled=not autorizado):
                 ruta = next(d for d in docs if d.name == doc_sel)
+                _auditar_envio_ia(str(ruta), "", id_caso=id_caso)
                 with st.spinner("Extrayendo datos…"):
                     datos = mod_extr.extract_document_data(str(ruta), tipo_ext)
                 if "_error" in datos:
@@ -1025,6 +1042,12 @@ def tab_generador() -> None:
         docs_extra = st.text_area(
             "Documentos adicionales del primer otrosí (uno por línea)", key="g_docs_extra"
         )
+    prescripcion_ok = st.checkbox(
+        "Evalué personalmente la prescripción de la(s) obligación(es) y "
+        "autorizo afirmar en el texto que no se encuentran prescritas "
+        "(solo si usted lo escribió; el sistema nunca lo afirma solo).",
+        key="g_prescripcion",
+    )
 
     if st.button("📝 Componer demanda (vista previa)", type="primary", key="g_componer"):
         campos = {
@@ -1033,6 +1056,7 @@ def tab_generador() -> None:
             "REPRESENTANTE_DEMANDANTE": representante,
             "BIENES_EMBARGO": bienes, "EQUIVALENCIA_PESOS": equivalencia,
             "GARANTIAS": garantias, "DOCUMENTOS_EXTRA": docs_extra,
+            "PRESCRIPCION_VALIDADA": "SI" if prescripcion_ok else "",
         }
         contexto = mod_gen.componer_contexto(caso, df_inst, df_partes, mandato, campos)
         st.session_state["g_contexto"] = contexto
