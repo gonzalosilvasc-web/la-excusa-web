@@ -161,3 +161,28 @@ nunca de menos); dobles lecturas de Excel por rerun de Streamlit (volumen
 local pequeño, cachear introduciría riesgo de datos obsoletos antes de la
 presentación); doble render del docx (necesario por diseño: se revisa el
 texto realmente renderizado).
+
+
+## Adenda 11/07/2026 — Corrección por auditoría en Windows real
+
+Hallazgos del auditor en Windows real, corregidos de raíz:
+
+| Hallazgo | Causa raíz | Corrección | Evidencia |
+|---|---|---|---|
+| `INICIAR_APP.bat` falla con «No se esperaba \… en este momento» en rutas con `(1)` | Expansión de variables de ruta con `)` dentro de bloques `if (...)` de cmd | Ambos `.bat` reescritos con **CERO bloques con paréntesis** (flujo solo por etiquetas/`goto`, rutas siempre entre comillas) | Nuevo `tests/validar_bat_windows.py`: ejecuta ambos `.bat` vía cmd dentro de «app test (1)» → **9/9 PASAN** (sin Python, ZIP sin extraer, diagnóstico completo, lanzador seguro), sin ningún «No se esperaba». Ejecutado vía Wine (equivalente; en Windows real correr el mismo script) |
+| pip falla en rutas largas (MAX_PATH) | venv y site-packages en ruta profunda | Nuevo `bootstrap.py` (solo stdlib) decide la ubicación del venv: proyecto >90 caracteres en Windows → venv en ruta corta externa `%LOCALAPPDATA%\LegalTechDemandas\venvs\<hash-sha256-12>`. **No se exige mover la carpeta.** | Lógica probada por unidad (rama externa con LOCALAPPDATA simulado; hash determinista) — suite §15. Instalación completa desde el ZIP oficial en ruta con tildes y doble «(1)»: app HTTP 200 en ~45 s |
+| Diagnóstico insuficiente | — | `DIAGNOSTICO.bat` + `bootstrap.py --diagnostico`: ruta del proyecto, ruta REAL del venv, explicación del riesgo de ruta larga, Python, pip, permisos de escritura, y `check_install.py` ejecutado con el intérprete del venv. `check_install.py` además reporta tolerancia a paréntesis y largo de ruta | Ejecutado bajo Wine en «app test (1)» y en Linux |
+| Frase jurídica riesgosa «obligación líquida y no prescrita» generada automáticamente | Texto fijo en `legal/generador.py` | El generador ya **no afirma prescripción**: el relato dice «obligación líquida y actualmente exigible». Nueva regla del revisor (`prescripcion`, CRÍTICA): cualquier afirmación de no-prescripción escrita a mano **bloquea la descarga** salvo validación expresa del abogado (checkbox en el generador → `PRESCRIPCION_VALIDADA`) | Suite §14 (3 pruebas) + prueba E2E de UI: bloqueo sin checkbox, permitido con checkbox |
+| Auditoría de IA externa insuficiente | — | Cada envío a IA registra en `audit_log.xlsx`: acción `ENVIO_DOCUMENTO_IA`, proveedor, modelo, archivo, **SHA-256 del archivo**, usuario, fecha/hora y autorización de confidencialidad confirmada. Modo manual sin API key intacto | Código en `app.py::_auditar_envio_ia` + `legal/extraccion.py::info_proveedor/hash_archivo`; modo sin API re-verificado por suite §2 |
+
+**Evidencia global de esta adenda:** `tests/test_flujo.py` → **63/63 PASAN** ·
+`tests/validar_bat_windows.py` → **9/9 PASAN** (Wine cmd, ruta «app test (1)») ·
+`check_install.py` → OK · instalación limpia desde el ZIP oficial en ruta con
+paréntesis y tildes → app operativa · flujo E2E de UI (incluida la compuerta
+de prescripción) → PASA.
+
+> Se mantiene la declaración: **validación directa en Windows real de esta
+> versión: NO EJECUTADA por el mantenedor** (sin Windows disponible);
+> validación equivalente en Wine/Linux: PASA. En Windows real, ejecutar
+> `python tests\validar_bat_windows.py` reproduce la validación con cmd.exe
+> auténtico.
